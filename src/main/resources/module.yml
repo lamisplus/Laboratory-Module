@@ -1,0 +1,65 @@
+basePackage: org.lamisplus.modules.laboratory
+name: LaboratoryModule
+dependencies: {PatientModule: 1.0.0 }
+store: true
+menus:
+  - icon: fa fa-flask
+    disabled: false
+    name: Laboratory
+    state: laboratory
+    url: /across/resources/static/laboratory/index.html
+umdLocation: /across/resources/static/laboratory/index.html
+webModules:
+  - breadcrumb: laboratory
+    name: LaboratoryModule
+    path: laboratory
+    position: 99
+permissions:
+  - name: create_lab_order
+    description: create lab order
+    moduleName: LaboratoryModule
+  - name: edit_lab_order
+    description: edit lab order
+    moduleName: LaboratoryModule
+  - name: view_lab_order
+    description: view lab order
+    moduleName: LaboratoryModule
+  - name: delete_lab_order
+    description: delete lab order
+    moduleName: LaboratoryModule
+  - name: create_sample_collection
+    description: create sample collection
+    moduleName: LaboratoryModule
+  - name: edit_sample_collection
+    description: edit sample collection
+    moduleName: LaboratoryModule
+  - name: view_sample_collection
+    description: view sample collection
+    moduleName: LaboratoryModule
+  - name: delete_sample_collection
+    description: delete sample collection
+    moduleName: LaboratoryModule
+  - name: create_sample_verification
+    description: create sample verification
+    moduleName: LaboratoryModule
+  - name: edit_sample_verification
+    description: edit sample verification
+    moduleName: LaboratoryModule
+  - name: view_sample_verification
+    description: view sample verification
+    moduleName: LaboratoryModule
+  - name: delete_sample_verification
+    description: delete sample verification
+    moduleName: LaboratoryModule
+  - name: create_test_results
+    description: create test results
+    moduleName: LaboratoryModule
+  - name: edit_test_results
+    description: edit test results
+    moduleName: LaboratoryModule
+  - name: view_test_results
+    description: view test results
+    moduleName: LaboratoryModule
+  - name: delete_test_results
+    description: delete test results
+    moduleName: LaboratoryModule

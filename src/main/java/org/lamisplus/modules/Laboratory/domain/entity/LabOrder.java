@@ -1,0 +1,40 @@
+package org.lamisplus.modules.Laboratory.domain.entity;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.persistence.*;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+@Table(name = "laboratory_order")
+public class LabOrder extends Audit<String>{
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    private Integer id;
+    @Column(name = "uuid")
+    private String uuid;
+    @Column(name = "visit_id")
+    private Integer visitId;
+    @Column(name = "patient_id")
+    private Integer patientId;
+    @Column(name = "userid")
+    private String userId;
+    @Column(name = "order_date")
+    private LocalDateTime orderDate;
+    @Column(name = "patient_uuid")
+    private String patientUuid;
+    @Column(name = "facility_id")
+    private Long facilityId;
+    @Column(name = "archived")
+    private Integer archived;
+    @JoinColumn(name = "lab_order_id")
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Test> tests;
+}
