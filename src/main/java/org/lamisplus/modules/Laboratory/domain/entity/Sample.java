@@ -54,4 +54,10 @@ public class Sample extends Audit<String> {
     private LocalDate dateSampleLoggedRemotely;
     @Column(name = "archived")
     private Integer archived;
+    @PrePersist
+    public void setFields(){
+        if(archived == null){
+            archived = 0;
+        }
+    }
 }

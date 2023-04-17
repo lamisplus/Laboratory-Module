@@ -143,7 +143,7 @@ const ModalViewResult = (props) => {
 
                                                    <Col xs="4">
                                                       <br />
-                                                        <span style={{ fontWeight: 'bold'}}> Results </span>: {ReactHtmlParser(collectResult.resultReported)}
+                                                        <span style={{ fontWeight: 'bold'}}> Results </span>: {collectResult.resultReport}
                                                     </Col>
                                                     <Col xs="4">
                                                     <br />
@@ -152,7 +152,7 @@ const ModalViewResult = (props) => {
 
                                                   <Col xs="12">
                                                   <br />
-                                                      <span style={{ fontWeight: 'bold'}}> Notes </span>: {collectResult.resultReport}
+                                                      <span style={{ fontWeight: 'bold'}}> Notes </span>: {ReactHtmlParser(collectResult.resultReported)}
                                                       <Divider  />
                                                   </Col>
                                               </Row>

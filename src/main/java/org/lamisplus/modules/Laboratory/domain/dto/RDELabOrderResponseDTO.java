@@ -23,8 +23,8 @@ public class RDELabOrderResponseDTO {
     private LocalDateTime dateResultReceived;
     private String result;
     private String resultReportedBy;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime dateResultReported;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate dateResultReported;
     private String checkedBy;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate dateChecked;

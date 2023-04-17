@@ -301,7 +301,7 @@ public class RDELabTestService {
                 }
                 try {
                     testDTO.setDateResultReceived(dto.getResults().get(0).getDateResultReceived());
-                    testDTO.setDateResultReported(dto.getResults().get(0).getDateResultReported());
+                    testDTO.setDateResultReported(dto.getResults().get(0).getDateResultReported().toLocalDate());
                 } catch (Exception ignored) {
                 }
                 try {

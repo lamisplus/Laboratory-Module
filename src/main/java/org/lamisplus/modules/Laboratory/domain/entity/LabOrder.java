@@ -3,10 +3,12 @@ package org.lamisplus.modules.Laboratory.domain.entity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @AllArgsConstructor
@@ -37,4 +39,10 @@ public class LabOrder extends Audit<String>{
     @JoinColumn(name = "lab_order_id")
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Test> tests;
+    @PrePersist
+    public void setFields(){
+        if(archived == null){
+            archived = 0;
+        }
+    }
 }

@@ -24,4 +24,10 @@ public class LabNumber extends Audit<String> {
     private String labNumber;
     @Column(name = "archived")
     private Integer archived;
+    @PrePersist
+    public void setFields(){
+        if(archived == null){
+            archived = 0;
+        }
+    }
 }

@@ -42,4 +42,10 @@ public class Test extends Audit<String> {
     private Long facilityId;
     @Column(name = "archived")
     private Integer archived;
+    @PrePersist
+    public void setFields(){
+        if(archived == null){
+            archived = 0;
+        }
+    }
 }

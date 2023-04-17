@@ -60,4 +60,11 @@ public class Result extends Audit<String> {
     private Integer archived;
     @Column(name = "pcr_lab_name")
     private String pcrLabName;
+
+    @PrePersist
+    public void setFields(){
+        if(archived == null){
+            archived = 0;
+        }
+    }
 }
