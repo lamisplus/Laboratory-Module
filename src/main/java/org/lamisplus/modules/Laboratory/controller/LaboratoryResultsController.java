@@ -1,11 +1,11 @@
-package org.lamisplus.modules.Laboratory.controller;
+package org.lamisplus.modules.laboratory.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.lamisplus.modules.Laboratory.domain.dto.HistoricalResultResponseDTO;
-import org.lamisplus.modules.Laboratory.domain.dto.ResultDTO;
-import org.lamisplus.modules.Laboratory.service.LabOrderService;
-import org.lamisplus.modules.Laboratory.service.ResultService;
+import org.lamisplus.modules.laboratory.domain.dto.HistoricalResultResponseDTO;
+import org.lamisplus.modules.laboratory.domain.dto.ResultDTO;
+import org.lamisplus.modules.laboratory.service.LabOrderService;
+import org.lamisplus.modules.laboratory.service.ResultService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

@@ -1,11 +1,11 @@
-package org.lamisplus.modules.Laboratory.controller;
+package org.lamisplus.modules.laboratory.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.lamisplus.modules.Laboratory.domain.dto.LabTestGroupDTO;
-import org.lamisplus.modules.Laboratory.domain.entity.LabTest;
-import org.lamisplus.modules.Laboratory.service.LabTestGroupService;
-import org.lamisplus.modules.Laboratory.service.LabTestService;
+import org.lamisplus.modules.laboratory.domain.dto.LabTestGroupDTO;
+import org.lamisplus.modules.laboratory.domain.entity.LabTest;
+import org.lamisplus.modules.laboratory.service.LabTestGroupService;
+import org.lamisplus.modules.laboratory.service.LabTestService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;

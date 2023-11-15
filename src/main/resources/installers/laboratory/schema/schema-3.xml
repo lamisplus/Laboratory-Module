@@ -4,12 +4,13 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
 
-    <changeSet id="20230215-002" author="Dr Karim">
+    <changeSet id="20230215-0025" author="Dr Karim">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">
-                SELECT COUNT(*)
-                FROM lims_pcr_lab
-                WHERE id = 1;
+<!--                SELECT COUNT(*)-->
+<!--                FROM lims_pcr_lab-->
+<!--                WHERE id = 1;-->
+                SELECT count(*) FROM information_schema.tables WHERE table_name = 'lims_pcr_lab';
             </sqlCheck>
         </preConditions>
         <sqlFile dbms="postgresql"

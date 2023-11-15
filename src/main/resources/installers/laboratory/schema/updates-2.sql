@@ -5,9 +5,9 @@ update laboratory_labtest set labtestgroup_id=5 where lab_test_name='TB-LAM';
 
 insert into laboratory_labtest(id, lab_test_name, unit, labtestgroup_id) values(64, 'AFB microscopy', '+/-', 5);
 insert into laboratory_labtest(id, lab_test_name, unit, labtestgroup_id) values(65, 'Gene Xpert', '+/-', 5);
-insert into laboratory_labtest(id, lab_test_name, unit, labtestgroup_id) values(66, 'Chest X-ray', '+/-', 5);
-insert into laboratory_labtest(id, lab_test_name, unit, labtestgroup_id) values(67, 'Clinical Diagnosis', '+/-', 5);
-insert into laboratory_labtest(id, lab_test_name, unit, labtestgroup_id) values(68, 'Others', '+/-', 5);
+insert into laboratory_labtest(id, lab_test_name, unit, labtestgroup_id) values(66, 'LF LAM', '+/-', 5);
+insert into laboratory_labtest(id, lab_test_name, unit, labtestgroup_id) values(67, 'TrueNAT', '+/-', 5);
+insert into laboratory_labtest(id, lab_test_name, unit, labtestgroup_id) values(68, 'TB LAMP', '+/-', 5);
 
 
 insert into laboratory_sampletype_labtest_link(labtest_id, sample_type_id)values(63,1);

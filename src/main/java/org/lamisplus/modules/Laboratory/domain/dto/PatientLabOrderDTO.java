@@ -1,4 +1,4 @@
-package org.lamisplus.modules.Laboratory.domain.dto;
+package org.lamisplus.modules.laboratory.domain.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;

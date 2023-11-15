@@ -1,10 +1,10 @@
-package org.lamisplus.modules.Laboratory.controller;
+package org.lamisplus.modules.laboratory.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.lamisplus.modules.Laboratory.domain.dto.SampleDTO;
-import org.lamisplus.modules.Laboratory.domain.entity.PCRLab;
-import org.lamisplus.modules.Laboratory.service.SampleService;
+import org.lamisplus.modules.laboratory.domain.dto.SampleDTO;
+import org.lamisplus.modules.laboratory.domain.entity.PCRLab;
+import org.lamisplus.modules.laboratory.service.SampleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

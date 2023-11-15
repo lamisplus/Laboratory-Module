@@ -1,20 +1,18 @@
-package org.lamisplus.modules.Laboratory.service;
+package org.lamisplus.modules.laboratory.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.lamisplus.modules.Laboratory.domain.dto.VerifiedSampleDTO;
-import org.lamisplus.modules.Laboratory.domain.entity.Sample;
-import org.lamisplus.modules.Laboratory.domain.entity.Test;
-import org.lamisplus.modules.Laboratory.domain.mapper.LabMapper;
-import org.lamisplus.modules.Laboratory.repository.SampleRepository;
-import org.lamisplus.modules.Laboratory.repository.TestRepository;
+import org.lamisplus.modules.laboratory.domain.dto.VerifiedSampleDTO;
+import org.lamisplus.modules.laboratory.domain.entity.Sample;
+import org.lamisplus.modules.laboratory.domain.entity.Test;
+import org.lamisplus.modules.laboratory.domain.mapper.LabMapper;
+import org.lamisplus.modules.laboratory.repository.SampleRepository;
+import org.lamisplus.modules.laboratory.repository.TestRepository;
 import org.lamisplus.modules.base.security.SecurityUtils;
 import org.springframework.stereotype.Service;
 
-import static org.lamisplus.modules.Laboratory.utility.LabUtils.SAMPLE_VERIFIED;
+import static org.lamisplus.modules.laboratory.utility.LabUtils.SAMPLE_VERIFIED;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class VerifiedSampleService {
     private final SampleRepository repository;

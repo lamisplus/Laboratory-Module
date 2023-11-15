@@ -1,12 +1,12 @@
-package org.lamisplus.modules.Laboratory.controller;
+package org.lamisplus.modules.laboratory.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.lamisplus.modules.Laboratory.domain.dto.RDELabOrderRequestDTO;
-import org.lamisplus.modules.Laboratory.domain.dto.RDELabOrderResponseDTO;
-import org.lamisplus.modules.Laboratory.domain.dto.VLOrderAndResultRequestDTO;
-import org.lamisplus.modules.Laboratory.domain.mapper.LabMapper;
-import org.lamisplus.modules.Laboratory.service.RDELabTestService;
+import org.lamisplus.modules.laboratory.domain.dto.RDELabOrderRequestDTO;
+import org.lamisplus.modules.laboratory.domain.dto.RDELabOrderResponseDTO;
+import org.lamisplus.modules.laboratory.domain.dto.VLOrderAndResultRequestDTO;
+import org.lamisplus.modules.laboratory.domain.mapper.LabMapper;
+import org.lamisplus.modules.laboratory.service.RDELabTestService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;

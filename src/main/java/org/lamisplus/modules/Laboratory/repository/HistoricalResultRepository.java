@@ -1,6 +1,6 @@
-package org.lamisplus.modules.Laboratory.repository;
+package org.lamisplus.modules.laboratory.repository;
 
-import org.lamisplus.modules.Laboratory.domain.entity.HistoricalResult;
+import org.lamisplus.modules.laboratory.domain.entity.HistoricalResult;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -17,7 +17,7 @@ public interface HistoricalResultRepository extends JpaRepository<HistoricalResu
             "inner join laboratory_result d on b.id=d.test_id\n" +
             "inner join laboratory_labtest e on b.lab_test_id=e.id\n" +
             "inner join laboratory_labtestgroup f on b.lab_test_group_id=f.id\n" +
-            "where a.patient_id=?1 and a.facility_id=?2\n" +
+            "where a.archived=0 and a.patient_id=?1 and a.facility_id=?2\n" +
             "order by b.id desc", nativeQuery = true)
     List<HistoricalResult> findHistoricalResultByPatientId(int patientId, Long facilityId);
 }

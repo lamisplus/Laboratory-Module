@@ -1,13 +1,12 @@
-package org.lamisplus.modules.Laboratory.service;
+package org.lamisplus.modules.laboratory.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.lamisplus.modules.Laboratory.domain.dto.TestDTO;
-import org.lamisplus.modules.Laboratory.domain.entity.LabOrder;
-import org.lamisplus.modules.Laboratory.domain.entity.Test;
-import org.lamisplus.modules.Laboratory.domain.mapper.LabMapper;
-import org.lamisplus.modules.Laboratory.repository.LabOrderRepository;
-import org.lamisplus.modules.Laboratory.repository.TestRepository;
+import org.lamisplus.modules.laboratory.domain.dto.TestDTO;
+import org.lamisplus.modules.laboratory.domain.entity.LabOrder;
+import org.lamisplus.modules.laboratory.domain.entity.Test;
+import org.lamisplus.modules.laboratory.domain.mapper.LabMapper;
+import org.lamisplus.modules.laboratory.repository.LabOrderRepository;
+import org.lamisplus.modules.laboratory.repository.TestRepository;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
 import org.springframework.stereotype.Service;
@@ -16,7 +15,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class TestService {
     private final TestRepository repository;
@@ -28,7 +26,7 @@ public class TestService {
         Test test = labMapper.toTest(testDTO);
         test.setUuid(UUID.randomUUID().toString());
 
-        LabOrder labOrder = labOrderRepository.findById(test.getLabOrderId()).orElse(null);
+        LabOrder labOrder = labOrderRepository.findByIdAndArchived(test.getLabOrderId(), 0).orElse(null);
         test.setFacilityId(getCurrentUserOrganization());
         assert labOrder != null;
         test.setPatientId(labOrder.getPatientId());
@@ -47,13 +45,15 @@ public class TestService {
     }
 
     public String Delete(Integer id){
-        Test labOrder = repository.findById(id).orElse(null);
+        Test labOrder = repository.findByIdAndArchived(id, 0).orElse(null);
         assert labOrder != null;
-        repository.delete(labOrder);
+        //repository.delete(labOrder);
+        labOrder.setArchived(1);
+        repository.save(labOrder);
         return id + " deleted successfully";
     }
 
     public TestDTO FindById(Integer id){
-        return labMapper.toTestDto(repository.findAllById(id).get(0));
+        return labMapper.toTestDto(repository.findAllByIdAndArchived(id, 0).get(0));
     }
 }

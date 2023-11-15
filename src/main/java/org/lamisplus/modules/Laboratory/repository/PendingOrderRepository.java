@@ -1,6 +1,6 @@
-package org.lamisplus.modules.Laboratory.repository;
+package org.lamisplus.modules.laboratory.repository;
 
-import org.lamisplus.modules.Laboratory.domain.entity.PendingOrder;
+import org.lamisplus.modules.laboratory.domain.entity.PendingOrder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

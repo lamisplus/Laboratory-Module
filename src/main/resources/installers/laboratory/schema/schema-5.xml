@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <property name="autoIncrement" value="true"/>
+
+    <changeSet id="20230627-001" author="Kennedy">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                select count(*) from laboratory_labtest where lab_test_name='Serum crAg'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            insert into laboratory_sample_type(id, sample_type_name) values(9, 'Sputum');
+
+            insert into laboratory_labtest(id, lab_test_name, unit, labtestgroup_id) values(69, 'Serum crAg', '+/-', 4);
+            insert into laboratory_labtest(id, lab_test_name, unit, labtestgroup_id) values(70, 'CSF crAg', '+/-', 4);
+            insert into laboratory_labtest(id, lab_test_name, unit, labtestgroup_id) values(71, 'LF-LAM', '+/-', 5);
+            insert into laboratory_labtest(id, lab_test_name, unit, labtestgroup_id) values(72, 'TrueNAT', '+/-', 5);
+            insert into laboratory_labtest(id, lab_test_name, unit, labtestgroup_id) values(73, 'TB LAMP', '+/-', 5);
+
+            insert into laboratory_sampletype_labtest_link(labtest_id, sample_type_id)values(69,6);
+            insert into laboratory_sampletype_labtest_link(labtest_id, sample_type_id)values(70,3);
+            insert into laboratory_sampletype_labtest_link(labtest_id, sample_type_id)values(71,8);
+            insert into laboratory_sampletype_labtest_link(labtest_id, sample_type_id)values(72,9);
+            insert into laboratory_sampletype_labtest_link(labtest_id, sample_type_id)values(73,9);
+
+            CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+            update laboratory_labtest set uuid=uuid_generate_v4() where uuid is null;
+            update laboratory_sample_type set uuid=uuid_generate_v4() where uuid is null;
+            update laboratory_sampletype_labtest_link set uuid=uuid_generate_v4() where uuid is null;
+        </sql>
+    </changeSet>
+</databaseChangeLog>

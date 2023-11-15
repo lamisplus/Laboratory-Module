@@ -1,10 +1,10 @@
-package org.lamisplus.modules.Laboratory.installers;
+package org.lamisplus.modules.laboratory.installers;
 
 import com.foreach.across.core.annotations.Installer;
 import com.foreach.across.core.installers.AcrossLiquibaseInstaller;
 import org.springframework.core.annotation.Order;
 
-@Order(2)
+@Order(3)
 @Installer(name = "schema-installer-pcr-labs",
         description = "Add pcr labs and data",
         version = 1)

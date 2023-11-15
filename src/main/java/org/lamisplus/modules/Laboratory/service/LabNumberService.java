@@ -1,16 +1,14 @@
-package org.lamisplus.modules.Laboratory.service;
+package org.lamisplus.modules.laboratory.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.lamisplus.modules.Laboratory.domain.entity.LabNumber;
-import org.lamisplus.modules.Laboratory.repository.LabNumberRepository;
+import org.lamisplus.modules.laboratory.domain.entity.LabNumber;
+import org.lamisplus.modules.laboratory.repository.LabNumberRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class LabNumberService {
     private final LabNumberRepository repository;

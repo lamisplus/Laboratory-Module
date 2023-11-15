@@ -1,4 +1,4 @@
-package org.lamisplus.modules.Laboratory;
+package org.lamisplus.modules.laboratory;
 
 import com.foreach.across.config.AcrossApplication;
 import com.foreach.across.core.AcrossModule;

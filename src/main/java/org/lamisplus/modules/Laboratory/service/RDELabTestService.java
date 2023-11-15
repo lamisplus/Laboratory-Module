@@ -1,19 +1,20 @@
-package org.lamisplus.modules.Laboratory.service;
+package org.lamisplus.modules.laboratory.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.lamisplus.modules.Laboratory.domain.dto.*;
-import org.lamisplus.modules.Laboratory.domain.entity.Sample;
-import org.lamisplus.modules.Laboratory.repository.SampleRepository;
+import org.audit4j.core.util.Log;
+import org.lamisplus.modules.laboratory.domain.dto.*;
+import org.lamisplus.modules.laboratory.domain.entity.LabOrder;
+import org.lamisplus.modules.laboratory.domain.entity.Sample;
+import org.lamisplus.modules.laboratory.domain.entity.Test;
+import org.lamisplus.modules.laboratory.repository.SampleRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.lamisplus.modules.Laboratory.utility.LabUtils.*;
+import static org.lamisplus.modules.laboratory.utility.LabUtils.*;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class RDELabTestService {
     private final LabOrderService labOrderService;
@@ -51,11 +52,11 @@ public class RDELabTestService {
 
             if(dto.getResult() == null || dto.getResult().isEmpty() || dto.getResult().trim().isEmpty()) {
                 test.setLabTestOrderStatus(SAMPLE_COLLECTED);
-                log.info("Sample-collected");
+                Log.info("Sample-collected");
             }
             else{
                 test.setLabTestOrderStatus(RESULT_REPORTED);
-                log.info("result-reported");
+                Log.info("result-reported");
             }
 
             tests.add(test);
@@ -65,7 +66,9 @@ public class RDELabTestService {
         LabOrderResponseDTO responseDTO = labOrderService.Save(labOrderDTO);
 
         //save sample and result
-        for(TestResponseDTO test:responseDTO.getTests()){
+        for(TestResponseDTO test:responseDTO.getTests()
+                .stream().filter(x -> x.getArchived().equals(0)).collect(Collectors.toList()))
+        {
             RDELabOrderRequestDTO dto = labDtoList.stream().filter(submittedTest -> submittedTest.getLabTestId()==test.getLabTestId()).findFirst().orElse(null);
             assert dto != null;
 
@@ -84,22 +87,22 @@ public class RDELabTestService {
             else {
                 sample.setSampleNumber(dto.getSampleNumber());
             }
-            log.info(sample.toString());
+            Log.info(sample.toString());
             SampleDTO dto1 = sampleService.Save(dto.getLabNumber(), sample);
 
             //Save verification info
-            Sample verifiedSample = sampleRepository.findById(dto1.getId()).orElse(null);
+            Sample verifiedSample = sampleRepository.findByIdAndArchived(dto1.getId(), 0).orElse(null);
             assert verifiedSample != null;
             verifiedSample.setDateSampleVerified(dto.getSampleCollectionDate());
             verifiedSample.setCommentSampleVerified("Sample verified");
             verifiedSample.setSampleVerifiedBy(dto.getSampleCollectedBy());
-            log.info(verifiedSample.toString());
+            Log.info(verifiedSample.toString());
             sampleRepository.save(verifiedSample);
 
             //save result
             if(rdeTestDTO.getResult() != null && !rdeTestDTO.getResult().isEmpty()) {
-                log.info(rdeTestDTO.toString());
-                log.info("C");
+                Log.info(rdeTestDTO.toString());
+                Log.info("C");
                 ResultDTO result = new ResultDTO();
                 result.setTestId(test.getId());
                 result.setResultReported(rdeTestDTO.getResult());
@@ -176,8 +179,8 @@ public class RDELabTestService {
             test.setLabTestOrderStatus(RESULT_REPORTED);
         }
         test.setLabOrderId(rdeTestDTO.getOrderId());
-        log.info("ORDER ID: "+rdeTestDTO.getOrderId());
-        log.info(test.toString());
+        Log.info("ORDER ID: "+rdeTestDTO.getOrderId());
+        Log.info(test.toString());
         testService.Update(orderId, test);
 
         SampleDTO sample = sampleService.FindByTestId(test.getId());
@@ -231,11 +234,33 @@ public class RDELabTestService {
     }
 
     public String DeleteRDELabTest(int id){
+        try {
+            SampleDTO sample = sampleService.FindByTestId(id);
+            if (sample != null) {
+                sampleService.Delete(sample.getId());
+            }
+        }
+        catch (Exception ignored) {
+        }
+
+        try{
+            ResultDTO result = resultService.GetResultsByTestId(id);
+            if (result != null) {
+                resultService.Delete(result.getId());
+            }
+        }
+        catch (Exception ignored) {
+        }
+
+        try{
+            TestDTO test = testService.FindById(id);
+            labOrderService.Delete(test.getLabOrderId());
+        }
+        catch (Exception ignored) {
+        }
+
         testService.Delete(id);
-        SampleDTO sample = sampleService.FindByTestId(id);
-        sampleService.Delete(sample.getId());
-        ResultDTO result = resultService.GetResultsByTestId(id);
-        resultService.Delete(result.getId());
+
         return id+" deleted successfully";
     }
 
@@ -243,8 +268,9 @@ public class RDELabTestService {
         PatientLabOrderDTO order = labOrderService.GetOrderById(id);
         List<RDELabOrderResponseDTO> testDTOList = new ArrayList<>();
 
-        log.info("Aa");
-        for(TestResponseDTO dto:order.getLabOrder().getTests()){
+        Log.info("Aa");
+        for(TestResponseDTO dto:order.getLabOrder().getTests()
+                .stream().filter(x -> x.getArchived().equals(0)).collect(Collectors.toList())){
             RDELabOrderResponseDTO testDTO = new RDELabOrderResponseDTO();
             testDTO.setLabTestId(dto.getLabTestId());
             testDTO.setLabNumber(dto.getLabNumber());
@@ -266,7 +292,7 @@ public class RDELabTestService {
             testDTO.setViralLoadIndicationName(labOrderService.GetNameById(dto.getViralLoadIndication(), APPLICATION_CODE_SET));
             testDTO.setLabTestOrderStatusName(labOrderService.GetNameById(dto.getLabTestOrderStatus(), LAB_ORDER_STATUS));
 
-            log.info("bb");
+            Log.info("bb");
             if(dto.getSamples().size()>0) {
                 testDTO.setOrderBy(dto.getSamples().get(0).getSampleCollectedBy());
                 testDTO.setSampleCollectedBy(dto.getSamples().get(0).getSampleCollectedBy());
@@ -284,7 +310,7 @@ public class RDELabTestService {
                 testDTO.setSampleTypeName(labOrderService.GetNameById(dto.getSamples().get(0).getSampleTypeId(), SAMPLE_TYPE));
             }
 
-            log.info("cc");
+            Log.info("cc");
             if(dto.getResults().size()>0) {
                 testDTO.setResult(dto.getResults().get(0).getResultReported());
                 testDTO.setResultReportedBy(dto.getResults().get(0).getResultReportedBy());
@@ -330,10 +356,10 @@ public class RDELabTestService {
                 }
             }
 
-            log.info("ee");
+            Log.info("ee");
             testDTOList.add(testDTO);
         }
-        log.info(testDTOList.toString());
+        Log.info(testDTOList.toString());
         return testDTOList;
     }
 

@@ -1,18 +1,16 @@
-package org.lamisplus.modules.Laboratory.service;
+package org.lamisplus.modules.laboratory.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.lamisplus.modules.Laboratory.domain.dto.LabTestGroupDTO;
-import org.lamisplus.modules.Laboratory.domain.entity.LabTestGroup;
-import org.lamisplus.modules.Laboratory.domain.mapper.LabMapper;
-import org.lamisplus.modules.Laboratory.repository.LabTestGroupRepository;
+import org.lamisplus.modules.laboratory.domain.dto.LabTestGroupDTO;
+import org.lamisplus.modules.laboratory.domain.entity.LabTestGroup;
+import org.lamisplus.modules.laboratory.domain.mapper.LabMapper;
+import org.lamisplus.modules.laboratory.repository.LabTestGroupRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class LabTestGroupService {
     private final LabTestGroupRepository labTestGroupRepository;

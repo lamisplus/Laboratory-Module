@@ -1,4 +1,4 @@
-package org.lamisplus.modules.Laboratory.domain.dto;
+package org.lamisplus.modules.laboratory.domain.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
@@ -24,6 +24,7 @@ public class TestResponseDTO {
     private String viralLoadIndicationName;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime orderDate;
+    private Integer archived;
 
     private List<SampleResponseDTO> samples;
     private List<ResultDTO> results;

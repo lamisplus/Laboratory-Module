@@ -1,16 +1,15 @@
-package org.lamisplus.modules.Laboratory.service;
+package org.lamisplus.modules.laboratory.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.lamisplus.modules.Laboratory.domain.dto.SampleDTO;
-import org.lamisplus.modules.Laboratory.domain.entity.PCRLab;
-import org.lamisplus.modules.Laboratory.domain.entity.Sample;
-import org.lamisplus.modules.Laboratory.domain.entity.Test;
-import org.lamisplus.modules.Laboratory.domain.mapper.LabMapper;
-import org.lamisplus.modules.Laboratory.repository.PCRLabRepository;
-import org.lamisplus.modules.Laboratory.repository.SampleRepository;
-import org.lamisplus.modules.Laboratory.repository.TestRepository;
+import org.lamisplus.modules.laboratory.domain.dto.SampleDTO;
+import org.lamisplus.modules.laboratory.domain.entity.PCRLab;
+import org.lamisplus.modules.laboratory.domain.entity.Sample;
+import org.lamisplus.modules.laboratory.domain.entity.Test;
+import org.lamisplus.modules.laboratory.domain.mapper.LabMapper;
+import org.lamisplus.modules.laboratory.repository.PCRLabRepository;
+import org.lamisplus.modules.laboratory.repository.SampleRepository;
+import org.lamisplus.modules.laboratory.repository.TestRepository;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
 import org.springframework.stereotype.Service;
@@ -20,10 +19,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.lamisplus.modules.Laboratory.utility.LabUtils.SAMPLE_COLLECTED;
+import static org.lamisplus.modules.laboratory.utility.LabUtils.SAMPLE_COLLECTED;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class SampleService {
     private final SampleRepository repository;
@@ -75,12 +73,15 @@ public class SampleService {
 
     public String Delete(Integer id){
         Sample labOrder = repository.findById(id).orElse(null);
-        repository.delete(labOrder);
+        //repository.delete(labOrder);
+        labOrder.setArchived(1);
+        repository.save(labOrder);
+
         return id + " deleted successfully";
     }
 
     public SampleDTO FindByTestId(int id){
-        List<Sample> sampleList = repository.findAllByTestId(id);
+        List<Sample> sampleList = repository.findAllByTestIdAndArchived(id, 0);
         if(sampleList.size() > 0) {
             return labMapper.tosSampleDto(sampleList.get(0));
         }
@@ -91,7 +92,7 @@ public class SampleService {
     }
 
     public SampleDTO FindById(int id) {
-        Sample sample = repository.findById(id).orElse(null);
+        Sample sample = repository.findByIdAndArchived(id, 0).orElse(null);
         return labMapper.tosSampleDto(sample);
     }
 
