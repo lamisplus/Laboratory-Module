@@ -1,14 +1,20 @@
 package org.lamisplus.modules.laboratory.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.audit4j.core.util.Log;
 import org.lamisplus.modules.laboratory.domain.dto.*;
 import org.lamisplus.modules.laboratory.domain.entity.LabOrder;
 import org.lamisplus.modules.laboratory.domain.entity.Sample;
 import org.lamisplus.modules.laboratory.domain.entity.Test;
+import org.lamisplus.modules.laboratory.repository.LabOrderRepository;
 import org.lamisplus.modules.laboratory.repository.SampleRepository;
+import org.lamisplus.modules.patient.domain.entity.Person;
+import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -16,12 +22,15 @@ import static org.lamisplus.modules.laboratory.utility.LabUtils.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RDELabTestService {
     private final LabOrderService labOrderService;
     private final TestService testService;
     private final SampleService sampleService;
     private final SampleRepository sampleRepository;
     private final ResultService resultService;
+    private final PersonRepository personRepository;
+    private final LabOrderRepository labOrderRepository;
     public static final int LAB_ORDER = 1;
     public static final int VL_ORDER = 2;
     public static final int ALL_ORDER = 3;
@@ -29,14 +38,15 @@ public class RDELabTestService {
     //RDE
     public List<RDELabOrderRequestDTO> SaveRDELabTests(List<RDELabOrderRequestDTO> labDtoList){
         //Save order
-        LabOrderDTO labOrderDTO=new LabOrderDTO();
+        log.info("data list {}", labDtoList);
+        LabOrderDTO labOrderDTO = new LabOrderDTO();
         List<TestDTO> tests = new ArrayList<>();
 
         RDELabOrderRequestDTO rdeTestDTO = labDtoList.get(0);
         labOrderDTO.setOrderDate(rdeTestDTO.getSampleCollectionDate());
         labOrderDTO.setPatientId(rdeTestDTO.getPatientId());
         labOrderDTO.setVisitId(0); //TODO get visit ID
-        if(rdeTestDTO.getClinicianName()==null){
+        if(rdeTestDTO.getClinicianName() == null){
             labOrderDTO.setUserId(rdeTestDTO.getOrderBy());
         }
         else {
@@ -58,18 +68,19 @@ public class RDELabTestService {
                 test.setLabTestOrderStatus(RESULT_REPORTED);
                 Log.info("result-reported");
             }
-
             tests.add(test);
         }
 
         labOrderDTO.setTests(tests);
+        log.info("labOrderDTO {}", labOrderDTO);
         LabOrderResponseDTO responseDTO = labOrderService.Save(labOrderDTO);
 
         //save sample and result
-        for(TestResponseDTO test:responseDTO.getTests()
-                .stream().filter(x -> x.getArchived().equals(0)).collect(Collectors.toList()))
+        List<TestResponseDTO> saveTest = responseDTO.getTests().stream().filter(x -> x.getArchived().equals(0)).collect(Collectors.toList());
+        log.info("saveTest: {}", saveTest);
+        for(TestResponseDTO test: saveTest)
         {
-            RDELabOrderRequestDTO dto = labDtoList.stream().filter(submittedTest -> submittedTest.getLabTestId()==test.getLabTestId()).findFirst().orElse(null);
+            RDELabOrderRequestDTO dto = labDtoList.stream().filter(submittedTest -> Objects.equals(submittedTest.getLabTestId(), test.getLabTestId())).findFirst().orElse(null);
             assert dto != null;
 
             //save sample
@@ -100,51 +111,74 @@ public class RDELabTestService {
             sampleRepository.save(verifiedSample);
 
             //save result
-            if(rdeTestDTO.getResult() != null && !rdeTestDTO.getResult().isEmpty()) {
-                Log.info(rdeTestDTO.toString());
-                Log.info("C");
+            Optional<RDELabOrderRequestDTO> requestDTO =
+                    labDtoList.stream().filter(lab -> lab.getLabTestId().equals(test.getLabTestId()))
+                    .findFirst();
+            if(requestDTO.isPresent()  &&  requestDTO.get().getResult() != null) {
+                RDELabOrderRequestDTO rdeLabOrderRequestDTO = requestDTO.get();
                 ResultDTO result = new ResultDTO();
                 result.setTestId(test.getId());
-                result.setResultReported(rdeTestDTO.getResult());
-                result.setResultReport(rdeTestDTO.getResult());
-                result.setResultReportedBy(rdeTestDTO.getResultReportedBy());
-                result.setAssayedBy(rdeTestDTO.getAssayedBy());
-                result.setPcrLabName(rdeTestDTO.getPcrLabName());
-                result.setPcrLabSampleNumber(rdeTestDTO.getPcrLabSampleNumber());
-                result.setCheckedBy(rdeTestDTO.getCheckedBy());
-                result.setApprovedBy(rdeTestDTO.getApprovedBy());
-                result.setDateApproved(rdeTestDTO.getDateApproved());
-
+                String resultValue = rdeLabOrderRequestDTO.getResult();
+                result.setResultReported(resultValue);
+                result.setResultReport(resultValue);
+                result.setResultReportedBy(rdeLabOrderRequestDTO.getResultReportedBy());
+                result.setAssayedBy(rdeLabOrderRequestDTO.getAssayedBy());
+                result.setPcrLabName(rdeLabOrderRequestDTO.getPcrLabName());
+                result.setPcrLabSampleNumber(rdeLabOrderRequestDTO.getPcrLabSampleNumber());
+                result.setCheckedBy(rdeLabOrderRequestDTO.getCheckedBy());
+                result.setApprovedBy(rdeLabOrderRequestDTO.getApprovedBy());
+                result.setDateApproved(rdeLabOrderRequestDTO.getDateApproved());
+                Person person = personRepository.findById((long) rdeLabOrderRequestDTO.getPatientId())
+                        .orElseThrow(() -> new RuntimeException("patient not found"));
+                checkAndUpdateIpt(test, resultValue, rdeLabOrderRequestDTO, person);
                 try {
-                    result.setDateSampleReceivedAtPcrLab(rdeTestDTO.getDateReceivedAtPcrLab().toLocalDate());
+                    result.setDateSampleReceivedAtPcrLab(rdeLabOrderRequestDTO.getDateReceivedAtPcrLab().toLocalDate());
                 }catch (Exception ignored){
                 }
                 try {
-                    result.setDateResultReported(rdeTestDTO.getDateResultReceived());
+                    result.setDateResultReported(rdeLabOrderRequestDTO.getDateResultReceived());
                 } catch (Exception ignored) {
                 }
                 try {
-                    result.setDateAssayed(rdeTestDTO.getDateAssayedBy().atStartOfDay());
+                    result.setDateAssayed(rdeLabOrderRequestDTO.getDateAssayedBy().atStartOfDay());
                 } catch (Exception ignored) {
                 }
                 try {
-                    result.setDateChecked(rdeTestDTO.getDateChecked().atStartOfDay());
+                    result.setDateChecked(rdeLabOrderRequestDTO.getDateChecked().atStartOfDay());
                 } catch (Exception ignored) {
                 }
                 try {
-                    result.setDateResultReceived(rdeTestDTO.getDateResultReceived());
+                    result.setDateResultReceived(rdeLabOrderRequestDTO.getDateResultReceived());
                 } catch (Exception ignored) {
                 }
                 try {
-                    result.setDateResultReported(rdeTestDTO.getDateResultReceived());
+                    result.setDateResultReported(rdeLabOrderRequestDTO.getDateResultReceived());
                 } catch (Exception ignored) {
                 }
-
                 resultService.Save(result);
+
             }
         }
 
         return labDtoList;
+    }
+
+    private  void checkAndUpdateIpt(TestResponseDTO test, String resultValue, RDELabOrderRequestDTO rdeLabOrderRequestDTO, Person person) {
+        List<Integer> testIdContainer = new ArrayList<>();
+        testIdContainer.add(51);
+        testIdContainer.add(65);
+        testIdContainer.add(66);
+        testIdContainer.add(73);
+        if(testIdContainer.contains(test.getLabTestId()) &&
+                (resultValue.equalsIgnoreCase("negative") || resultValue.equalsIgnoreCase("-"))){
+
+            LocalDateTime sampleCollectionDateTime = rdeLabOrderRequestDTO.getSampleCollectionDate();
+            LocalDate sampleCollectionDate =
+                    sampleCollectionDateTime != null ?
+                            sampleCollectionDateTime.toLocalDate() : null;
+            labOrderRepository.updateEligibleForTPT(person.getUuid(), sampleCollectionDate);
+
+        }
     }
 
     private String Generate_Random_ID() {

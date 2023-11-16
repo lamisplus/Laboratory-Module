@@ -55,6 +55,7 @@ public class LabOrderService {
             assert person != null;
             labOrder.setPatientUuid(person.getUuid());
             labOrder.setFacilityId(getCurrentUserOrganization());
+            labOrder.setArchived(0);
 
             for (Test test : labOrder.getTests()) {
                 test.setUuid(UUID.randomUUID().toString());
@@ -80,6 +81,7 @@ public class LabOrderService {
 
     public LabOrderResponseDTO Update(int order_id, LabOrderDTO labOrderDTO){
         LabOrder labOrder = labMapper.toLabOrder(labOrderDTO);
+        labOrder.setArchived(0);
         labOrder.setUserId(SecurityUtils.getCurrentUserLogin().orElse(""));
         for (Test test:labOrder.getTests()){
             test.setLabTestOrderStatus(PENDING_SAMPLE_COLLECTION);
