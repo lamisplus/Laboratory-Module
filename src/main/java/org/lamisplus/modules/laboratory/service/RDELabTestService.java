@@ -213,10 +213,8 @@ public class RDELabTestService {
             test.setLabTestOrderStatus(RESULT_REPORTED);
         }
         test.setLabOrderId(rdeTestDTO.getOrderId());
-        Log.info("ORDER ID: "+rdeTestDTO.getOrderId());
-        Log.info(test.toString());
+        test.setLabTestId(rdeTestDTO.getLabTestId());
         testService.Update(orderId, test);
-
         SampleDTO sample = sampleService.FindByTestId(test.getId());
         sample.setDateSampleCollected(rdeTestDTO.getSampleCollectionDate());
         sample.setSampleCollectedBy(rdeTestDTO.getSampleCollectedBy());
@@ -261,7 +259,6 @@ public class RDELabTestService {
             result.setDateResultReported(rdeTestDTO.getDateResultReceived());
         } catch (Exception ignored) {
         }
-
         resultService.Save(result);
 
         return rdeTestDTO;

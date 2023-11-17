@@ -284,7 +284,6 @@ public class LabOrderService {
             dto.setPatientPhoneNumber(jsonNodeTransformer.getNodeValue(personResponseDTO.getContactPoint(),"contactPoint", "value", true));
             Log.info("HERE 1: "+personResponseDTO);
             dto.setLabOrder(AppendAdditionalTestDetails(labMapper.toLabOrderResponseDto(order)));
-
             patientLabOrderDTOS.add(dto);
         }
 
