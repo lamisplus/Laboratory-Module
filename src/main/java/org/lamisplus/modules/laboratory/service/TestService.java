@@ -41,6 +41,7 @@ public class TestService {
 
     public TestDTO Update(int order_id, TestDTO testDTO){
         Test test = labMapper.toTest(testDTO);
+        test.setArchived(0);
         return labMapper.toTestDto(repository.save(test));
     }
 

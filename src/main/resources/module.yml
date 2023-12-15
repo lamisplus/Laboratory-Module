@@ -1,6 +1,6 @@
 basePackage: org.lamisplus.modules.laboratory
 name: LaboratoryModule
-dependencies: {PatientModule: 2.0.4}
+dependencies: {PatientModule: 2.0.5}
 store: true
 menus:
   - icon: fa fa-flask

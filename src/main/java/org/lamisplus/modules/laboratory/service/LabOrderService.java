@@ -55,6 +55,7 @@ public class LabOrderService {
             assert person != null;
             labOrder.setPatientUuid(person.getUuid());
             labOrder.setFacilityId(getCurrentUserOrganization());
+            labOrder.setArchived(0);
 
             for (Test test : labOrder.getTests()) {
                 test.setUuid(UUID.randomUUID().toString());
@@ -80,6 +81,7 @@ public class LabOrderService {
 
     public LabOrderResponseDTO Update(int order_id, LabOrderDTO labOrderDTO){
         LabOrder labOrder = labMapper.toLabOrder(labOrderDTO);
+        labOrder.setArchived(0);
         labOrder.setUserId(SecurityUtils.getCurrentUserLogin().orElse(""));
         for (Test test:labOrder.getTests()){
             test.setLabTestOrderStatus(PENDING_SAMPLE_COLLECTION);
@@ -255,6 +257,7 @@ public class LabOrderService {
                 testDTO.setSamples(sampleDTOList);
                 testDTO.setResults(resultDTOList);
                 testDTO.setOrderDate(labOrderDTO.getOrderDate());
+                testDTO.setArchived(0);
             }
             labOrderDTO.setTests(testDTOList);
             return labOrderDTO;
@@ -282,7 +285,6 @@ public class LabOrderService {
             dto.setPatientPhoneNumber(jsonNodeTransformer.getNodeValue(personResponseDTO.getContactPoint(),"contactPoint", "value", true));
             Log.info("HERE 1: "+personResponseDTO);
             dto.setLabOrder(AppendAdditionalTestDetails(labMapper.toLabOrderResponseDto(order)));
-
             patientLabOrderDTOS.add(dto);
         }
 
