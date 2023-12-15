@@ -25,7 +25,9 @@ public class LaboratoryHivOrdersController {
     }
     @PutMapping("/rde-orders/{orderId}")
     public List<RDELabOrderRequestDTO> UpdateRDELabOrder(@PathVariable int orderId, @RequestBody List<OtherTestOrderRequestDTO> labOrders){
-        return labTestService.UpdateRDELabTests(orderId, labMapper.OtherTestOrderToList(labOrders));
+        List<RDELabOrderRequestDTO> labDtoList = labMapper.OtherTestOrderToList(labOrders);
+        log.info("data for update: ",labDtoList );
+        return labTestService.UpdateRDELabTests(orderId, labDtoList);
     }
     @PutMapping("/rde-orders/tests/{id}")
     public RDELabOrderRequestDTO UpdateRDETest(@PathVariable int id, @RequestBody OtherTestOrderRequestDTO rdeTestDTO){
