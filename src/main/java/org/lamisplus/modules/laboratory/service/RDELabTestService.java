@@ -297,6 +297,7 @@ public class RDELabTestService {
 
     public List<RDELabOrderResponseDTO> GetRDEOrderById(Integer id){
         PatientLabOrderDTO order = labOrderService.GetOrderById(id);
+        log.info("vl data {}", order);
         List<RDELabOrderResponseDTO> testDTOList = new ArrayList<>();
         for(TestResponseDTO dto:order.getLabOrder().getTests()
                 .stream().filter(x -> x.getArchived().equals(0)).collect(Collectors.toList())){

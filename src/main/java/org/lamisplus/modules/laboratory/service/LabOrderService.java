@@ -257,6 +257,7 @@ public class LabOrderService {
                 testDTO.setSamples(sampleDTOList);
                 testDTO.setResults(resultDTOList);
                 testDTO.setOrderDate(labOrderDTO.getOrderDate());
+                testDTO.setArchived(0);
             }
             labOrderDTO.setTests(testDTOList);
             return labOrderDTO;
