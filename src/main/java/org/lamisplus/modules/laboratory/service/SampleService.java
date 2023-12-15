@@ -40,7 +40,7 @@ public class SampleService {
         sample.setPatientUuid(test.getPatientUuid());
         sample.setPatientId(test.getPatientId());
         sample.setFacilityId(getCurrentUserOrganization());
-
+        sample.setArchived(0);
         SaveLabNumber(sample.getTestId(), labNumber, SAMPLE_COLLECTED);
         return labMapper.tosSampleDto(repository.save(sample));
     }

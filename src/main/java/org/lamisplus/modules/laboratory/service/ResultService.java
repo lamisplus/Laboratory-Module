@@ -1,6 +1,7 @@
 package org.lamisplus.modules.laboratory.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.audit4j.core.util.Log;
 import org.lamisplus.modules.laboratory.domain.dto.ResultDTO;
 import org.lamisplus.modules.laboratory.domain.entity.Result;
@@ -21,6 +22,7 @@ import static org.lamisplus.modules.laboratory.utility.LabUtils.RESULT_REPORTED;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class    ResultService {
     private final ResultRepository repository;
     private final LabMapper labMapper;
@@ -30,9 +32,9 @@ public class    ResultService {
 
     public ResultDTO Save(ResultDTO resultDTO){
         Result result = labMapper.toResult(resultDTO);
-        //result.setResultReportedBy(SecurityUtils.getCurrentUserLogin().orElse(""));
-        result.setUuid(UUID.randomUUID().toString());
 
+        result.setUuid(UUID.randomUUID().toString());
+        log.info("result {}", result);
         Test test = testRepository.findByIdAndArchived(result.getTestId(), 0).orElse(null);
         assert test != null;
         test.setLabTestOrderStatus(RESULT_REPORTED);
@@ -41,6 +43,7 @@ public class    ResultService {
         result.setPatientUuid(test.getPatientUuid());
         result.setPatientId(test.getPatientId());
         result.setFacilityId(getCurrentUserOrganization());
+        result.setArchived(0);
         Log.info("FF: "+result);
         return labMapper.toResultDto(repository.save(result));
     }
