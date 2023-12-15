@@ -1,10 +1,13 @@
 package org.lamisplus.modules.laboratory.repository;
 
 import org.lamisplus.modules.laboratory.domain.entity.LabOrder;
-import org.lamisplus.modules.laboratory.domain.entity.Test;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -21,4 +24,11 @@ public interface LabOrderRepository extends JpaRepository<LabOrder, Integer> {
     Optional<LabOrder> findByUuid(String uuid);
     List<LabOrder> findAllByFacilityId(Long facilityId);
     Optional<LabOrder> findByIdAndArchived(int id, int archived);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE hiv_observation " +
+            "SET data = jsonb_set(data, '{tbIptScreening, eligibleForTPT}', '\"Yes\"', true) " +
+            "WHERE person_uuid = :personUuid AND date_of_observation = :dateOfObservation", nativeQuery = true)
+    void updateEligibleForTPT(@Param("personUuid") String personUuid, @Param("dateOfObservation") LocalDate dateOfObservation);
 }
