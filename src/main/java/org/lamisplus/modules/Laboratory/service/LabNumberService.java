@@ -1,8 +1,8 @@
-package org.lamisplus.modules.laboratory.service;
+package org.lamisplus.modules.Laboratory.service;
 
 import lombok.RequiredArgsConstructor;
-import org.lamisplus.modules.laboratory.domain.entity.LabNumber;
-import org.lamisplus.modules.laboratory.repository.LabNumberRepository;
+import org.lamisplus.modules.Laboratory.domain.entity.LabNumber;
+import org.lamisplus.modules.Laboratory.repository.LabNumberRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

@@ -1,7 +1,7 @@
-package org.lamisplus.modules.laboratory.domain.mapper;
+package org.lamisplus.modules.Laboratory.domain.mapper;
 
-import org.lamisplus.modules.laboratory.domain.dto.*;
-import org.lamisplus.modules.laboratory.domain.entity.*;
+import org.lamisplus.modules.Laboratory.domain.dto.*;
+import org.lamisplus.modules.Laboratory.domain.entity.*;
 import org.mapstruct.Mapper;
 
 import java.util.List;

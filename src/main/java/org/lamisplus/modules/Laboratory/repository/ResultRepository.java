@@ -1,7 +1,7 @@
-package org.lamisplus.modules.laboratory.repository;
+package org.lamisplus.modules.Laboratory.repository;
 
-import org.lamisplus.modules.laboratory.domain.entity.LabOrder;
-import org.lamisplus.modules.laboratory.domain.entity.Result;
+import org.lamisplus.modules.Laboratory.domain.dto.LastTestResult;
+import org.lamisplus.modules.Laboratory.domain.entity.Result;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -20,4 +20,9 @@ public interface ResultRepository  extends JpaRepository<Result, Integer> {
     Optional<Result> findByUuid(String uuid);
     List<Result> findAllByFacilityId(Long facilityId);
     Optional<Result> findByIdAndArchived(int id, int archived);
+
+    @Query(value =
+            "SELECT l.* FROM laboratory_test t join laboratory_result l on l.test_id = t.lab_test_id " +
+                    "WHERE t.patient_id = ?1 AND t.facility_id=?2 AND t.lab_test_id = ?3 and t.archived = 0 order by l.date_result_reported desc limit 1 ", nativeQuery = true)
+    Optional<Result> getLastTestResult(Long patientId, Long facilityId, Integer testId);
 }

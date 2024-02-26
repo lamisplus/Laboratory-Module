@@ -1,13 +1,14 @@
-package org.lamisplus.modules.laboratory.service;
+package org.lamisplus.modules.Laboratory.service;
 
 import lombok.RequiredArgsConstructor;
 import org.audit4j.core.util.Log;
-import org.lamisplus.modules.laboratory.domain.dto.ResultDTO;
-import org.lamisplus.modules.laboratory.domain.entity.Result;
-import org.lamisplus.modules.laboratory.domain.entity.Test;
-import org.lamisplus.modules.laboratory.domain.mapper.LabMapper;
-import org.lamisplus.modules.laboratory.repository.ResultRepository;
-import org.lamisplus.modules.laboratory.repository.TestRepository;
+import org.lamisplus.modules.Laboratory.domain.dto.LastTestResult;
+import org.lamisplus.modules.Laboratory.domain.dto.ResultDTO;
+import org.lamisplus.modules.Laboratory.domain.entity.Result;
+import org.lamisplus.modules.Laboratory.domain.entity.Test;
+import org.lamisplus.modules.Laboratory.domain.mapper.LabMapper;
+import org.lamisplus.modules.Laboratory.repository.ResultRepository;
+import org.lamisplus.modules.Laboratory.repository.TestRepository;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.patient.repository.PersonRepository;
@@ -17,7 +18,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.lamisplus.modules.laboratory.utility.LabUtils.RESULT_REPORTED;
+import static org.lamisplus.modules.Laboratory.utility.LabUtils.RESULT_REPORTED;
+
 
 @Service
 @RequiredArgsConstructor
@@ -78,4 +80,5 @@ public class    ResultService {
             return new ResultDTO();
         }
     }
+
 }

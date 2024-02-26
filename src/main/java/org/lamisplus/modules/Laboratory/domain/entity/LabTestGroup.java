@@ -1,4 +1,4 @@
-package org.lamisplus.modules.laboratory.domain.entity;
+package org.lamisplus.modules.Laboratory.domain.entity;
 
 import lombok.*;
 

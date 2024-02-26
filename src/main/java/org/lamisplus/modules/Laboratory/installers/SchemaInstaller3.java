@@ -1,4 +1,4 @@
-package org.lamisplus.modules.laboratory.installers;
+package org.lamisplus.modules.Laboratory.installers;
 
 import com.foreach.across.core.annotations.Installer;
 import com.foreach.across.core.installers.AcrossLiquibaseInstaller;

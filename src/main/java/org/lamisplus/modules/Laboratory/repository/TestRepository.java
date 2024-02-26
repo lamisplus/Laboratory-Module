@@ -1,6 +1,6 @@
-package org.lamisplus.modules.laboratory.repository;
+package org.lamisplus.modules.Laboratory.repository;
 
-import org.lamisplus.modules.laboratory.domain.entity.Test;
+import org.lamisplus.modules.Laboratory.domain.entity.Test;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

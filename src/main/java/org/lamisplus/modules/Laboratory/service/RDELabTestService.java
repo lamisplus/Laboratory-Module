@@ -1,18 +1,17 @@
-package org.lamisplus.modules.laboratory.service;
+package org.lamisplus.modules.Laboratory.service;
 
 import lombok.RequiredArgsConstructor;
 import org.audit4j.core.util.Log;
-import org.lamisplus.modules.laboratory.domain.dto.*;
-import org.lamisplus.modules.laboratory.domain.entity.LabOrder;
-import org.lamisplus.modules.laboratory.domain.entity.Sample;
-import org.lamisplus.modules.laboratory.domain.entity.Test;
-import org.lamisplus.modules.laboratory.repository.SampleRepository;
+import org.lamisplus.modules.Laboratory.domain.dto.*;
+import org.lamisplus.modules.Laboratory.domain.entity.Sample;
+import org.lamisplus.modules.Laboratory.repository.SampleRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.lamisplus.modules.laboratory.utility.LabUtils.*;
+import static org.lamisplus.modules.Laboratory.utility.LabUtils.*;
+
 
 @Service
 @RequiredArgsConstructor
