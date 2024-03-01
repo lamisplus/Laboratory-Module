@@ -33,4 +33,32 @@
             update laboratory_sampletype_labtest_link set uuid=uuid_generate_v4() where uuid is null;
         </sql>
     </changeSet>
+
+    <changeSet id="20240301-002" author="Amos-ecew">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT count(*)
+                FROM information_schema.columns
+                WHERE table_name = 'laboratory_order' AND column_name = 'ordered_date'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE laboratory_order
+                ADD COLUMN ordered_date date;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20240301-003" author="Amos-ecews">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT count(*)
+                FROM information_schema.columns
+                WHERE table_name = 'laboratory_order' AND column_name = 'lab_order_indication'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE laboratory_order
+                ADD COLUMN lab_order_indication varchar(25);
+        </sql>
+    </changeSet>
 </databaseChangeLog>

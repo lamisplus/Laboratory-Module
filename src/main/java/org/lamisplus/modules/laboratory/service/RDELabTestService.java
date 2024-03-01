@@ -52,6 +52,10 @@ public class RDELabTestService {
         else {
             labOrderDTO.setUserId(rdeTestDTO.getClinicianName());
         }
+        labOrderDTO.setOrderedDate(rdeTestDTO.getOrderedDate());
+        labOrderDTO.setLabOrderIndication(rdeTestDTO.getLabOrderIndication());
+
+        System.out.println("saving dto => amos  : "+labOrderDTO);
 
         for (RDELabOrderRequestDTO dto:labDtoList) {
             TestDTO test = new TestDTO();
@@ -72,7 +76,9 @@ public class RDELabTestService {
         }
 
         labOrderDTO.setTests(tests);
+
         log.info("labOrderDTO {}", labOrderDTO);
+
         LabOrderResponseDTO responseDTO = labOrderService.Save(labOrderDTO);
 
         //save sample and result

@@ -30,4 +30,7 @@ public class OtherTestOrderRequestDTO {
     private String comments;
     private String clinicianName;
     private String sampleCollectedBy;
+    private String labOrderIndication;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate orderedDate;
 }

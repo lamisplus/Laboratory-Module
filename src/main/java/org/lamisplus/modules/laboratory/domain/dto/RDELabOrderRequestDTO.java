@@ -48,4 +48,8 @@ public class RDELabOrderRequestDTO {
     private String approvedBy;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate dateApproved;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate orderedDate;
+    private String labOrderIndication;
+
 }

@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -39,10 +40,16 @@ public class LabOrder extends Audit<String>{
     @JoinColumn(name = "lab_order_id")
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Test> tests;
+    //add new columns
+    @Column(name = "ordered_date")
+    private LocalDate orderedDate;
+    @Column(name = "lab_order_indication")
+    private String labOrderIndication;
     @PrePersist
     public void setFields(){
         if(archived == null){
             archived = 0;
         }
     }
+
 }

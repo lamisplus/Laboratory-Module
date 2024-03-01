@@ -1,9 +1,11 @@
 package org.lamisplus.modules.laboratory.service;
 
 import lombok.RequiredArgsConstructor;
+import net.bytebuddy.implementation.bytecode.Throw;
 import org.audit4j.core.util.Log;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
 import org.lamisplus.modules.laboratory.domain.dto.*;
 import org.lamisplus.modules.laboratory.domain.entity.LabOrder;
 import org.lamisplus.modules.laboratory.domain.entity.PendingOrder;
@@ -46,16 +48,18 @@ public class LabOrderService {
     private final JsonNodeTransformer jsonNodeTransformer;
 
     public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
-        try {
-            Person person = personRepository.findById((long) labOrderDTO.getPatientId()).orElse(null);
-
+            Person person = personRepository.findById((long) labOrderDTO.getPatientId()).orElseThrow(
+                    () -> new EntityNotFoundException(Person.class, " id", "not found"));
             LabOrder labOrder = labMapper.toLabOrder(labOrderDTO);
             //labOrder.setUserId(SecurityUtils.getCurrentUserLogin().orElse(""));
             labOrder.setUuid(UUID.randomUUID().toString());
-            assert person != null;
             labOrder.setPatientUuid(person.getUuid());
             labOrder.setFacilityId(getCurrentUserOrganization());
             labOrder.setArchived(0);
+            Log.info("setting lab order date and indication {} {}", labOrderDTO.getOrderedDate(), labOrderDTO.getLabOrderIndication() );
+            labOrder.setLabOrderIndication(labOrderDTO.getLabOrderIndication());
+            labOrder.setOrderedDate(labOrderDTO.getOrderedDate());
+//            labOrder.setOrderDate();
 
             for (Test test : labOrder.getTests()) {
                 test.setUuid(UUID.randomUUID().toString());
@@ -67,11 +71,7 @@ public class LabOrderService {
 
             LogInfo("LAB_ORDER", labOrderDTO);
             return labMapper.toLabOrderResponseDto(labOrderRepository.save(labOrder));
-        }
-        catch(Exception e){
-            Log.error(e);
-            return null;
-        }
+
     }
 
     private Long getCurrentUserOrganization() {

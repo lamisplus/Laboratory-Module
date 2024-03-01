@@ -26,8 +26,15 @@ public class LaboratoryLabTestsController {
         return labTestGroupService.GetAllLabTestGroups();
     }
 
+
+    @GetMapping("/labtestgroups/tb")
+    public List<LabTestGroupDTO> GetAllTbLabTestGroups(){
+        return labTestGroupService.GetAllTbLabTestGroups();
+    }
+
     @GetMapping("/labtests/{testName}")
     public LabTest GetLabTestDetailsByName(@PathVariable String testName){
         return labTestService.FindLabTestByName(testName);
     }
+
 }
