@@ -14,7 +14,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -70,6 +73,28 @@ public class LaboratoryResultsController {
             return new ResponseEntity<>(lastTestResult, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @GetMapping("/cs/page/load/{patientId}/{facilityId}")
+    public ResponseEntity<Map<String, Object>> getCSPageLoad(@PathVariable Long patientId, @PathVariable Long facilityId) {
+        Map<String, Object> map = new HashMap<>();
+
+        Optional<Result> cd4 = resultRepository.getLastTestResult(patientId,facilityId, 1);
+
+        if(cd4.isPresent()){
+            map.put("cd4", resultService.convertResultToLastTestResult(cd4.get()));
+        } else {
+            cd4 = resultRepository.getLastTestResult(patientId,facilityId, 50);
+            cd4.ifPresent(result -> map.put("cd4", resultService.convertResultToLastTestResult(result)));
+        }
+        Optional<Result> vl = resultRepository.getLastTestResult(patientId,facilityId, 16);
+        vl.ifPresent(result -> map.put("vl", resultService.convertResultToLastTestResult(result)));
+
+        if(!map.isEmpty()){
+            return new ResponseEntity<>(map, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
     }
 }

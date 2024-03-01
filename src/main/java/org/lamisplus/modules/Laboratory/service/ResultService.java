@@ -81,4 +81,14 @@ public class    ResultService {
         }
     }
 
+    public LastTestResult convertResultToLastTestResult(Result result) {
+        LastTestResult lastTestResult = new LastTestResult();
+        lastTestResult.setResultReported(result.getResultReported());
+        lastTestResult.setDateResultReported(result.getDateResultReported());
+        lastTestResult.setId(result.getId());
+        lastTestResult.setPatientUuid(result.getPatientUuid());
+        lastTestResult.setPatientId(result.getPatientId());
+        return lastTestResult;
+    }
+
 }
