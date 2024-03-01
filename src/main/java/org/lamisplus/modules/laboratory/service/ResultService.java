@@ -13,7 +13,9 @@ import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -80,5 +82,18 @@ public class    ResultService {
         else {
             return new ResultDTO();
         }
+    }
+
+    public String getResultByPatientUuidAndDateResultReceived(String patientUuid, String dateResultReceived) {
+
+        LocalDate date = LocalDate.parse(dateResultReceived);
+
+        Optional<Result> result = repository.findByPatientUuidAndDateResultReceived(patientUuid, date.atStartOfDay());
+        if (result.isPresent()) {
+            ResultDTO resultDTO = labMapper.toResultDto(result.get());
+            return StringUtils.hasText(resultDTO.getResultReported()) ? resultDTO.getResultReported() : null;
+        }
+
+        return null;
     }
 }
