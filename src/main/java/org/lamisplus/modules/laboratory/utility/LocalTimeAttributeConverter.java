@@ -1,4 +1,4 @@
-package org.lamisplus.modules.laboratory.utility;
+package org.lamisplus.modules.Laboratory.utility;
 
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;

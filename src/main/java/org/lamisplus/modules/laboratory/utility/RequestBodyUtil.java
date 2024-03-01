@@ -1,4 +1,4 @@
-package org.lamisplus.modules.laboratory.utility;
+package org.lamisplus.modules.Laboratory.utility;
 
 import okhttp3.MediaType;
 import okhttp3.RequestBody;

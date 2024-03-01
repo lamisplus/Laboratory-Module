@@ -1,18 +1,16 @@
-package org.lamisplus.modules.laboratory.service;
+package org.lamisplus.modules.Laboratory.service;
 
 import lombok.RequiredArgsConstructor;
-import net.bytebuddy.implementation.bytecode.Throw;
 import org.audit4j.core.util.Log;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
-import org.lamisplus.modules.laboratory.domain.dto.*;
-import org.lamisplus.modules.laboratory.domain.entity.LabOrder;
-import org.lamisplus.modules.laboratory.domain.entity.PendingOrder;
-import org.lamisplus.modules.laboratory.domain.entity.Test;
-import org.lamisplus.modules.laboratory.domain.mapper.LabMapper;
-import org.lamisplus.modules.laboratory.repository.*;
-import org.lamisplus.modules.laboratory.utility.JsonNodeTransformer;
+import org.lamisplus.modules.Laboratory.domain.dto.*;
+import org.lamisplus.modules.Laboratory.domain.entity.LabOrder;
+import org.lamisplus.modules.Laboratory.domain.entity.PendingOrder;
+import org.lamisplus.modules.Laboratory.domain.entity.Test;
+import org.lamisplus.modules.Laboratory.domain.mapper.LabMapper;
+import org.lamisplus.modules.Laboratory.repository.*;
+import org.lamisplus.modules.Laboratory.utility.JsonNodeTransformer;
 import org.lamisplus.modules.base.domain.dto.PageDTO;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.security.SecurityUtils;
@@ -27,7 +25,8 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.lamisplus.modules.laboratory.utility.LabUtils.*;
+import static org.lamisplus.modules.Laboratory.utility.LabUtils.*;
+
 
 @Service
 @RequiredArgsConstructor
@@ -48,18 +47,15 @@ public class LabOrderService {
     private final JsonNodeTransformer jsonNodeTransformer;
 
     public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
-            Person person = personRepository.findById((long) labOrderDTO.getPatientId()).orElseThrow(
-                    () -> new EntityNotFoundException(Person.class, " id", "not found"));
+        try {
+            Person person = personRepository.findById((long) labOrderDTO.getPatientId()).orElse(null);
+
             LabOrder labOrder = labMapper.toLabOrder(labOrderDTO);
             //labOrder.setUserId(SecurityUtils.getCurrentUserLogin().orElse(""));
             labOrder.setUuid(UUID.randomUUID().toString());
+            assert person != null;
             labOrder.setPatientUuid(person.getUuid());
             labOrder.setFacilityId(getCurrentUserOrganization());
-            labOrder.setArchived(0);
-            Log.info("setting lab order date and indication {} {}", labOrderDTO.getOrderedDate(), labOrderDTO.getLabOrderIndication() );
-            labOrder.setLabOrderIndication(labOrderDTO.getLabOrderIndication());
-            labOrder.setOrderedDate(labOrderDTO.getOrderedDate());
-//            labOrder.setOrderDate();
 
             for (Test test : labOrder.getTests()) {
                 test.setUuid(UUID.randomUUID().toString());
@@ -71,7 +67,11 @@ public class LabOrderService {
 
             LogInfo("LAB_ORDER", labOrderDTO);
             return labMapper.toLabOrderResponseDto(labOrderRepository.save(labOrder));
-
+        }
+        catch(Exception e){
+            Log.error(e);
+            return null;
+        }
     }
 
     private Long getCurrentUserOrganization() {
@@ -81,7 +81,6 @@ public class LabOrderService {
 
     public LabOrderResponseDTO Update(int order_id, LabOrderDTO labOrderDTO){
         LabOrder labOrder = labMapper.toLabOrder(labOrderDTO);
-        labOrder.setArchived(0);
         labOrder.setUserId(SecurityUtils.getCurrentUserLogin().orElse(""));
         for (Test test:labOrder.getTests()){
             test.setLabTestOrderStatus(PENDING_SAMPLE_COLLECTION);
@@ -257,7 +256,6 @@ public class LabOrderService {
                 testDTO.setSamples(sampleDTOList);
                 testDTO.setResults(resultDTOList);
                 testDTO.setOrderDate(labOrderDTO.getOrderDate());
-                testDTO.setArchived(0);
             }
             labOrderDTO.setTests(testDTOList);
             return labOrderDTO;
@@ -285,6 +283,7 @@ public class LabOrderService {
             dto.setPatientPhoneNumber(jsonNodeTransformer.getNodeValue(personResponseDTO.getContactPoint(),"contactPoint", "value", true));
             Log.info("HERE 1: "+personResponseDTO);
             dto.setLabOrder(AppendAdditionalTestDetails(labMapper.toLabOrderResponseDto(order)));
+
             patientLabOrderDTOS.add(dto);
         }
 

@@ -1,4 +1,4 @@
-package org.lamisplus.modules.laboratory.domain;
+package org.lamisplus.modules.Laboratory.domain;
 
 public interface LaboratoryDomain {
 }

@@ -1,8 +1,8 @@
-package org.lamisplus.modules.laboratory.service;
+package org.lamisplus.modules.Laboratory.service;
 
 import lombok.RequiredArgsConstructor;
-import org.lamisplus.modules.laboratory.domain.entity.LabTest;
-import org.lamisplus.modules.laboratory.repository.LabTestRepository;
+import org.lamisplus.modules.Laboratory.domain.entity.LabTest;
+import org.lamisplus.modules.Laboratory.repository.LabTestRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;

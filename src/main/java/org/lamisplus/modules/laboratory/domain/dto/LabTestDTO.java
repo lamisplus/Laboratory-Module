@@ -1,7 +1,7 @@
-package org.lamisplus.modules.laboratory.domain.dto;
+package org.lamisplus.modules.Laboratory.domain.dto;
 
 import lombok.Data;
-import org.lamisplus.modules.laboratory.domain.entity.SampleType;
+import org.lamisplus.modules.Laboratory.domain.entity.SampleType;
 
 import java.util.List;
 

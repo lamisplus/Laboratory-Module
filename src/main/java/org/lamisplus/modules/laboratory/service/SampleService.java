@@ -1,15 +1,15 @@
-package org.lamisplus.modules.laboratory.service;
+package org.lamisplus.modules.Laboratory.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.lamisplus.modules.laboratory.domain.dto.SampleDTO;
-import org.lamisplus.modules.laboratory.domain.entity.PCRLab;
-import org.lamisplus.modules.laboratory.domain.entity.Sample;
-import org.lamisplus.modules.laboratory.domain.entity.Test;
-import org.lamisplus.modules.laboratory.domain.mapper.LabMapper;
-import org.lamisplus.modules.laboratory.repository.PCRLabRepository;
-import org.lamisplus.modules.laboratory.repository.SampleRepository;
-import org.lamisplus.modules.laboratory.repository.TestRepository;
+import org.lamisplus.modules.Laboratory.domain.dto.SampleDTO;
+import org.lamisplus.modules.Laboratory.domain.entity.PCRLab;
+import org.lamisplus.modules.Laboratory.domain.entity.Sample;
+import org.lamisplus.modules.Laboratory.domain.entity.Test;
+import org.lamisplus.modules.Laboratory.domain.mapper.LabMapper;
+import org.lamisplus.modules.Laboratory.repository.PCRLabRepository;
+import org.lamisplus.modules.Laboratory.repository.SampleRepository;
+import org.lamisplus.modules.Laboratory.repository.TestRepository;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.lamisplus.modules.laboratory.utility.LabUtils.SAMPLE_COLLECTED;
+import static org.lamisplus.modules.Laboratory.utility.LabUtils.SAMPLE_COLLECTED;
+
 
 @Service
 @RequiredArgsConstructor
@@ -28,7 +29,7 @@ public class SampleService {
     private final LabMapper labMapper;
     private final TestRepository testRepository;
     private  final UserService userService;
-    private final PCRLabRepository PCRLabRepository;
+    private final PCRLabRepository pcrLabRepository;
 
     public SampleDTO Save(String labNumber, SampleDTO sampleDTO){
         Sample sample = labMapper.tosSample(sampleDTO);
@@ -97,12 +98,12 @@ public class SampleService {
     }
 
     public List<PCRLab> getAllPCRLabs(){
-        return this.PCRLabRepository.allpcrlabs();
+        return pcrLabRepository.allpcrlabs();
     }
 
     @SneakyThrows
     public PCRLab getSingleLab(Long id) {
-        return this.PCRLabRepository.findById(id)
+        return pcrLabRepository.findById(id)
                 .orElseThrow(() -> new Exception("LIMSPCRLab NOT FOUND"));
     }
 }

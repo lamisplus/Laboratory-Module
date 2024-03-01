@@ -1,4 +1,4 @@
-package org.lamisplus.modules.laboratory.domain.dto;
+package org.lamisplus.modules.Laboratory.domain.dto;
 
 import lombok.Data;
 

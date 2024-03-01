@@ -1,9 +1,9 @@
-package org.lamisplus.modules.laboratory.controller;
+package org.lamisplus.modules.Laboratory.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.lamisplus.modules.laboratory.domain.dto.VerifiedSampleDTO;
-import org.lamisplus.modules.laboratory.service.VerifiedSampleService;
+import org.lamisplus.modules.Laboratory.domain.dto.VerifiedSampleDTO;
+import org.lamisplus.modules.Laboratory.service.VerifiedSampleService;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
