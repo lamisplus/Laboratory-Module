@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.audit4j.core.util.Log;
 import org.lamisplus.modules.laboratory.domain.dto.ResultDTO;
+import org.lamisplus.modules.laboratory.domain.dto.ResultResponse;
 import org.lamisplus.modules.laboratory.domain.entity.Result;
 import org.lamisplus.modules.laboratory.domain.entity.Test;
 import org.lamisplus.modules.laboratory.domain.mapper.LabMapper;
@@ -84,17 +85,17 @@ public class    ResultService {
         }
     }
 
-    public String getResultByPatientUuidAndDateResultReceived(String patientUuid, String dateResultReceived) {
+    public ResultResponse getResultByPatientUuidAndDateResultReceived(String patientUuid, String dateResultReceived) {
 
-        final String response = " ";
+        final String response = "";
         LocalDate date = LocalDate.parse(dateResultReceived);
 
         Optional<Result> result = repository.findByPatientUuidAndDateResultReceived(patientUuid, date.atStartOfDay());
         if (result.isPresent()) {
             ResultDTO resultDTO = labMapper.toResultDto(result.get());
-            return StringUtils.hasText(resultDTO.getResultReported()) ? resultDTO.getResultReported() : response;
+            return StringUtils.hasText(resultDTO.getResultReported()) ? ResultResponse.builder().result(resultDTO.getResultReported()).build() : ResultResponse.builder().result(response).build();
         }
 
-        return response;
+        return ResultResponse.builder().result(response).build();
     }
 }
