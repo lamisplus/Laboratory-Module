@@ -86,14 +86,15 @@ public class    ResultService {
 
     public String getResultByPatientUuidAndDateResultReceived(String patientUuid, String dateResultReceived) {
 
+        final String response = "";
         LocalDate date = LocalDate.parse(dateResultReceived);
 
         Optional<Result> result = repository.findByPatientUuidAndDateResultReceived(patientUuid, date.atStartOfDay());
         if (result.isPresent()) {
             ResultDTO resultDTO = labMapper.toResultDto(result.get());
-            return StringUtils.hasText(resultDTO.getResultReported()) ? resultDTO.getResultReported() : null;
+            return StringUtils.hasText(resultDTO.getResultReported()) ? resultDTO.getResultReported() : response;
         }
 
-        return null;
+        return response;
     }
 }
