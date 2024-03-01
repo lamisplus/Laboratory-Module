@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,7 +65,7 @@ public class LaboratoryResultsController {
         Result result = resultRepository.getLastTestResult(patientId, facilityId, testId).get();
         LastTestResult lastTestResult = new LastTestResult();
         lastTestResult.setResultReported(result.getResultReported());
-        lastTestResult.setDateResultReported(result.getDateResultReported());
+        lastTestResult.setDateResultReported(LocalDate.from(result.getDateResultReported()));
         lastTestResult.setId(result.getId());
         lastTestResult.setPatientUuid(result.getPatientUuid());
         lastTestResult.setPatientId(result.getPatientId());

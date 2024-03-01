@@ -1,6 +1,4 @@
 package org.lamisplus.modules.Laboratory.repository;
-
-import org.lamisplus.modules.Laboratory.domain.dto.LastTestResult;
 import org.lamisplus.modules.Laboratory.domain.entity.Result;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

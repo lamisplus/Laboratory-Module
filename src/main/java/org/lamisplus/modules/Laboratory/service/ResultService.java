@@ -15,6 +15,7 @@ import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -87,7 +88,7 @@ public class    ResultService {
     public LastTestResult convertResultToLastTestResult(Result result) {
         LastTestResult lastTestResult = new LastTestResult();
         lastTestResult.setResultReported(result.getResultReported());
-        lastTestResult.setDateResultReported(result.getDateResultReported());
+        lastTestResult.setDateResultReported(LocalDate.from(result.getDateResultReported()));
         lastTestResult.setId(result.getId());
         lastTestResult.setPatientUuid(result.getPatientUuid());
         lastTestResult.setPatientId(result.getPatientId());
