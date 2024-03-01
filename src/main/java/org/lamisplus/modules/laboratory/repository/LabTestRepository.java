@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface LabTestRepository  extends JpaRepository<LabTest, Integer> {
     LabTest findByLabTestNameContainsIgnoreCase(String TestName);
+
 }

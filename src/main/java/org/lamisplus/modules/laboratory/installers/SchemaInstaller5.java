@@ -7,7 +7,7 @@ import org.springframework.core.annotation.Order;
 @Order(5)
 @Installer(name = "Add missing lab tests",
         description = "Add missing lab tests",
-        version = 1)
+        version = 2)
 public class SchemaInstaller5 extends AcrossLiquibaseInstaller {
     public SchemaInstaller5() {
         super("classpath:installers/laboratory/schema/schema-5.xml");
