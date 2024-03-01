@@ -86,7 +86,7 @@ public class    ResultService {
 
     public String getResultByPatientUuidAndDateResultReceived(String patientUuid, String dateResultReceived) {
 
-        final String response = "";
+        final String response = " ";
         LocalDate date = LocalDate.parse(dateResultReceived);
 
         Optional<Result> result = repository.findByPatientUuidAndDateResultReceived(patientUuid, date.atStartOfDay());
