@@ -51,10 +51,11 @@ public class LaboratoryResultsController {
     public List<HistoricalResultResponseDTO> GetHistoricalResultsByPatientId(@PathVariable int id){
         return labOrderService.GetHistoricalResultsByPatientId(id);
     }
-    @GetMapping(value = "/result/patient", produces = MediaType.APPLICATION_JSON_VALUE)
+
+    @GetMapping("/result/patient")
 
     public ResponseEntity<ResultDTO> getResultByPatientUuidAndDateResultReceived(@RequestParam String patientUuid,
-                                                                              @RequestParam String dateResultReceived) {
+                                                                                 @RequestParam String dateResultReceived) {
         return ResponseEntity.ok().body(resultService.getResultByPatientUuidAndDateResultReceived(patientUuid, dateResultReceived));
     }
 }
