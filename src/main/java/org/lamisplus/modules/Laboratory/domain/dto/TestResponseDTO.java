@@ -3,6 +3,7 @@ package org.lamisplus.modules.Laboratory.domain.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,7 +26,8 @@ public class TestResponseDTO {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime orderDate;
     private Integer archived;
-
+//    private String labOrderIndication;
+//    private LocalDate orderedDate;
     private List<SampleResponseDTO> samples;
     private List<ResultDTO> results;
 }

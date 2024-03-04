@@ -3,7 +3,9 @@ package org.lamisplus.modules.Laboratory.service;
 import lombok.RequiredArgsConstructor;
 import org.audit4j.core.util.Log;
 import org.lamisplus.modules.Laboratory.domain.dto.*;
+import org.lamisplus.modules.Laboratory.domain.entity.LabOrder;
 import org.lamisplus.modules.Laboratory.domain.entity.Sample;
+import org.lamisplus.modules.Laboratory.repository.LabOrderRepository;
 import org.lamisplus.modules.Laboratory.repository.SampleRepository;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,8 @@ public class RDELabTestService {
     public static final int VL_ORDER = 2;
     public static final int ALL_ORDER = 3;
 
+    private  final LabOrderRepository labOrderRepository;
+
     //RDE
     public List<RDELabOrderRequestDTO> SaveRDELabTests(List<RDELabOrderRequestDTO> labDtoList){
         //Save order
@@ -33,6 +37,8 @@ public class RDELabTestService {
 
         RDELabOrderRequestDTO rdeTestDTO = labDtoList.get(0);
         labOrderDTO.setOrderDate(rdeTestDTO.getSampleCollectionDate());
+        labOrderDTO.setLabOrderIndication(rdeTestDTO.getLabOrderIndication());
+        labOrderDTO.setOrderedDate(rdeTestDTO.getOrderedDate());
         labOrderDTO.setPatientId(rdeTestDTO.getPatientId());
         labOrderDTO.setVisitId(0); //TODO get visit ID
         if(rdeTestDTO.getClinicianName()==null){
@@ -166,11 +172,23 @@ public class RDELabTestService {
     }
 
     public RDELabOrderRequestDTO UpdateRDELabTest(int orderId, RDELabOrderRequestDTO rdeTestDTO){
+        LabOrder labOrder = labOrderRepository.findByIdAndArchived(rdeTestDTO.getOrderId(), 0).orElse(null);
+
+        labOrder.setOrderedDate(rdeTestDTO.getOrderedDate());
+        labOrder.setLabOrderIndication(rdeTestDTO.getLabOrderIndication());
+
+        Log.info("ORDER ID: {},",labOrder);
+        labOrderRepository.save(labOrder);
+
+
         TestDTO test = testService.FindById(rdeTestDTO.getId());
         //test.setLabTestId(rdeTestDTO.getLabTestId());
         //test.setLabTestGroupId(rdeTestDTO.getLabTestGroupId());
         test.setViralLoadIndication(rdeTestDTO.getViralLoadIndication());
         test.setDescription(rdeTestDTO.getComments());
+        test.setLabOrderIndication(rdeTestDTO.getLabOrderIndication());
+        test.setOrderedDate(rdeTestDTO.getOrderedDate());
+
         if(rdeTestDTO.getResult() == null || rdeTestDTO.getResult().isEmpty() || rdeTestDTO.getResult().trim().isEmpty()) {
             test.setLabTestOrderStatus(SAMPLE_COLLECTED);
         }
@@ -285,6 +303,8 @@ public class RDELabTestService {
             } catch (Exception ignored) {
             }
             testDTO.setClinicianName(order.getLabOrder().getUserId());
+            testDTO.setLabOrderIndication(order.getLabOrder().getLabOrderIndication());
+            testDTO.setOrderedDate(order.getLabOrder().getOrderedDate());
             testDTO.setLabTestOrderStatus(dto.getLabTestOrderStatus());
             testDTO.setLabTestGroupName(labOrderService.GetNameById(dto.getLabTestGroupId(), LAB_TEST_GROUP));
             testDTO.setLabTestName(labOrderService.GetNameById(dto.getLabTestId(), LAB_TEST));

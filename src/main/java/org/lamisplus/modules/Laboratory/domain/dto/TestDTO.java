@@ -2,6 +2,7 @@ package org.lamisplus.modules.Laboratory.domain.dto;
 
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -20,7 +21,8 @@ public class TestDTO {
     private String patientUuid;
     private Long facilityId;
     private Integer labOrderId;
-
+    private LocalDate orderedDate;
+    private String labOrderIndication;
     private List<SampleResponseDTO> samples;
     private List<ResultDTO> results;
 }
