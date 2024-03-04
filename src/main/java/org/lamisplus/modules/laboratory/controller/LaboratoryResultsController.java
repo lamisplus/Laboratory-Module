@@ -5,8 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.lamisplus.modules.laboratory.domain.dto.HistoricalResultResponseDTO;
 import org.lamisplus.modules.laboratory.domain.dto.ResultDTO;
 import org.lamisplus.modules.laboratory.domain.dto.ResultResponse;
+import org.lamisplus.modules.laboratory.domain.entity.Result;
 import org.lamisplus.modules.laboratory.service.LabOrderService;
 import org.lamisplus.modules.laboratory.service.ResultService;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,9 +51,10 @@ public class LaboratoryResultsController {
     public List<HistoricalResultResponseDTO> GetHistoricalResultsByPatientId(@PathVariable int id){
         return labOrderService.GetHistoricalResultsByPatientId(id);
     }
-    @GetMapping("/result/patient")
+    @GetMapping(value = "/result/patient", produces = MediaType.APPLICATION_JSON_VALUE)
+
     public ResponseEntity<ResultDTO> getResultByPatientUuidAndDateResultReceived(@RequestParam String patientUuid,
-                                                                                 @RequestParam String dateResultReceived) {
+                                                                              @RequestParam String dateResultReceived) {
         return ResponseEntity.ok().body(resultService.getResultByPatientUuidAndDateResultReceived(patientUuid, dateResultReceived));
     }
 }
