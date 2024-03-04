@@ -35,4 +35,6 @@ public class ResultDTO {
     private LocalDateTime dateResultReceived;
     private String resultReceivedBy;
     private String pcrLabName;
+    private String labOrderIndication;
+    private LocalDate orderedDate;
 }

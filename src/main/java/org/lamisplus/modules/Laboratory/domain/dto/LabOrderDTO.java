@@ -16,7 +16,7 @@ public class LabOrderDTO {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime orderDate;
     private String userId;
-    private LocalDate OrderedDate;
+    private LocalDate orderedDate;
     private String labOrderIndication;
     private List<TestDTO> tests;
 }
