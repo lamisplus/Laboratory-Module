@@ -13,10 +13,13 @@ import org.lamisplus.modules.laboratory.repository.TestRepository;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.patient.repository.PersonRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,14 +29,14 @@ import static org.lamisplus.modules.laboratory.utility.LabUtils.RESULT_REPORTED;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class    ResultService {
+public class ResultService {
     private final ResultRepository repository;
     private final LabMapper labMapper;
     private final PersonRepository personRepository;
     private final TestRepository testRepository;
-    private  final UserService userService;
+    private final UserService userService;
 
-    public ResultDTO Save(ResultDTO resultDTO){
+    public ResultDTO Save(ResultDTO resultDTO) {
         Result result = labMapper.toResult(resultDTO);
 
         result.setUuid(UUID.randomUUID().toString());
@@ -47,21 +50,21 @@ public class    ResultService {
         result.setPatientId(test.getPatientId());
         result.setFacilityId(getCurrentUserOrganization());
         result.setArchived(0);
-        Log.info("FF: "+result);
+        Log.info("FF: " + result);
         return labMapper.toResultDto(repository.save(result));
     }
 
     private Long getCurrentUserOrganization() {
-        Optional<User> userWithRoles = userService.getUserWithRoles ();
-        return userWithRoles.map (User::getCurrentOrganisationUnitId).orElse (null);
+        Optional<User> userWithRoles = userService.getUserWithRoles();
+        return userWithRoles.map(User::getCurrentOrganisationUnitId).orElse(null);
     }
 
-    public ResultDTO Update(int order_id, ResultDTO resultDTO){
+    public ResultDTO Update(int order_id, ResultDTO resultDTO) {
         Result updated_result = labMapper.toResult(resultDTO);
         return labMapper.toResultDto(repository.save(updated_result));
     }
 
-    public String Delete(Integer id){
+    public String Delete(Integer id) {
         Result labOrder = repository.findByIdAndArchived(id, 0).orElse(null);
         //repository.delete(labOrder);
         labOrder.setArchived(1);
@@ -70,32 +73,34 @@ public class    ResultService {
         return id.toString() + " deleted successfully";
     }
 
-    public ResultDTO GetResultsById(Integer id){
+    public ResultDTO GetResultsById(Integer id) {
         return labMapper.toResultDto(repository.findByIdAndArchived(id, 0).orElse(null));
     }
 
-    public ResultDTO GetResultsByTestId(Integer TestId){
+    public ResultDTO GetResultsByTestId(Integer TestId) {
         List<Result> resultList = repository.findAllByTestIdAndArchived(TestId, 0);
 
-        if(resultList.size() > 0) {
+        if (resultList.size() > 0) {
             return labMapper.toResultDto(resultList.get(0));
-        }
-        else {
+        } else {
             return new ResultDTO();
         }
     }
 
-    public ResultResponse getResultByPatientUuidAndDateResultReceived(String patientUuid, String dateResultReceived) {
+    public ResultDTO getResultByPatientUuidAndDateResultReceived(String patientUuid, String dateResultReceived) {
 
         final String response = "";
+
         LocalDate date = LocalDate.parse(dateResultReceived);
 
         Optional<Result> result = repository.findByPatientUuidAndDateResultReceived(patientUuid, date.atStartOfDay());
-        if (result.isPresent()) {
-            ResultDTO resultDTO = labMapper.toResultDto(result.get());
-            return StringUtils.hasText(resultDTO.getResultReported()) ? ResultResponse.builder().result(resultDTO.getResultReported()).build() : ResultResponse.builder().result(response).build();
+        if (!result.isPresent()) {
+
+            //return StringUtils.hasText(resultDTO.getResultReported()) ? ResultResponse.builder().result(resultDTO.getResultReported()).build() : ResultResponse.builder().result(response).build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No record found for Result");
         }
 
-        return ResultResponse.builder().result(response).build();
+
+        return labMapper.toResultDto(result.get());
     }
 }
