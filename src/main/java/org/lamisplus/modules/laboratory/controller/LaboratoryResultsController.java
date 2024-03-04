@@ -48,9 +48,9 @@ public class LaboratoryResultsController {
     public List<HistoricalResultResponseDTO> GetHistoricalResultsByPatientId(@PathVariable int id){
         return labOrderService.GetHistoricalResultsByPatientId(id);
     }
-    @GetMapping("/result/patient/{patientUuid}/{dateResultReceived}")
-    public ResultResponse getResultByPatientUuidAndDateResultReceived(@PathVariable String patientUuid,
-                                                                      @PathVariable String dateResultReceived) {
+    @GetMapping("/result/patient")
+    public ResultResponse getResultByPatientUuidAndDateResultReceived(@RequestParam String patientUuid,
+                                                                      @RequestParam String dateResultReceived) {
         return resultService.getResultByPatientUuidAndDateResultReceived(patientUuid, dateResultReceived);
     }
 }
