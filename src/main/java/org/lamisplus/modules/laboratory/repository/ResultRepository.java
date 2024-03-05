@@ -20,4 +20,5 @@ public interface ResultRepository  extends JpaRepository<Result, Integer> {
     Optional<Result> findByUuid(String uuid);
     List<Result> findAllByFacilityId(Long facilityId);
     Optional<Result> findByIdAndArchived(int id, int archived);
+    Optional<Result> findByPatientUuidAndDateResultReceived(String patientUuid, LocalDateTime dateResultReceived);
 }
