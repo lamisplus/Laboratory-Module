@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.lamisplus.modules.laboratory.domain.dto.HistoricalResultResponseDTO;
 import org.lamisplus.modules.laboratory.domain.dto.ResultDTO;
 import org.lamisplus.modules.laboratory.domain.dto.ResultResponse;
+import org.lamisplus.modules.laboratory.domain.dto.SingleResultProjectionDTO;
 import org.lamisplus.modules.laboratory.domain.entity.Result;
 import org.lamisplus.modules.laboratory.service.LabOrderService;
 import org.lamisplus.modules.laboratory.service.ResultService;
@@ -54,8 +55,8 @@ public class LaboratoryResultsController {
 
     @GetMapping("/result/patient")
 
-    public ResponseEntity<ResultDTO> getResultByPatientUuidAndDateResultReceived(@RequestParam String patientUuid,
-                                                                                 @RequestParam String dateResultReceived) {
-        return ResponseEntity.ok().body(resultService.getResultByPatientUuidAndDateResultReceived(patientUuid, dateResultReceived));
+    public ResponseEntity <SingleResultProjectionDTO> getResultByPatientUuidAndDateResultReceived(@RequestParam String patientUuid,
+                                                                                                  @RequestParam String dateResultReceived) {
+        return ResponseEntity.ok().body(resultService.getResultByPatientUuidAndDateResultReceived (patientUuid, dateResultReceived));
     }
 }

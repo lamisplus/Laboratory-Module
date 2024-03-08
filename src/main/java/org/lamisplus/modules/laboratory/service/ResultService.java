@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.audit4j.core.util.Log;
 import org.lamisplus.modules.laboratory.domain.dto.ResultDTO;
 import org.lamisplus.modules.laboratory.domain.dto.ResultResponse;
+import org.lamisplus.modules.laboratory.domain.dto.SingleResultProjectionDTO;
 import org.lamisplus.modules.laboratory.domain.entity.Result;
 import org.lamisplus.modules.laboratory.domain.entity.Test;
 import org.lamisplus.modules.laboratory.domain.mapper.LabMapper;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.persistence.EntityNotFoundException;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
@@ -87,18 +89,37 @@ public class ResultService {
         }
     }
 
-    public ResultDTO getResultByPatientUuidAndDateResultReceived(String patientUuid, String dateResultReceived) {
+    public SingleResultProjectionDTO getResultByPatientUuidAndDateResultReceived(String patientUuid, String dateResultReceived) {
 
         LocalDate date = LocalDate.parse(dateResultReceived);
 
-        Optional<Result> result = repository.findByPatientUuidAndDateResultReceived(patientUuid, date.atStartOfDay());
-        if (!result.isPresent()) {
+        Optional<SingleResultProjectionDTO> result = repository.findByPatientUuidAndDateResultReceived(patientUuid, date.atStartOfDay(), getCurrentUserOrganization());
 
-            //return StringUtils.hasText(resultDTO.getResultReported()) ? ResultResponse.builder().result(resultDTO.getResultReported()).build() : ResultResponse.builder().result(response).build();
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No record found for Result");
+        if (result.isPresent()) {
+            return result.get();
+        } else {
+            // Handle the case where the result is not present
+            throw new EntityNotFoundException("Result not found for patientUuid: " + patientUuid + " and dateResultReceived: " + dateResultReceived);
         }
-
-
-        return labMapper.toResultDto(result.get());
     }
+
+
+//public SingleResultProjectionDTO getResultByPatientUuidAndDateResultReceived (String patientUuid, LocalDate dateResultReceived) {
+//
+//        return repository.findByPatientUuidAndDateResultReceived(patientUuid,dateResultReceived,getCurrentUserOrganization()).get();
+//}
+//    public ResultDTO getResultByPatientUuidAndDateResultReceived(String patientUuid, String dateResultReceived) {
+//
+//        LocalDate date = LocalDate.parse(dateResultReceived);
+//
+//        Optional<Result> result = repository.findByPatientUuidAndDateResultReceived(patientUuid, date.atStartOfDay());
+//        if (!result.isPresent()) {
+//
+//            //return StringUtils.hasText(resultDTO.getResultReported()) ? ResultResponse.builder().result(resultDTO.getResultReported()).build() : ResultResponse.builder().result(response).build();
+//            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No record found for Result");
+//        }
+//
+//
+//        return labMapper.toResultDto(result.get());
+//    }
 }

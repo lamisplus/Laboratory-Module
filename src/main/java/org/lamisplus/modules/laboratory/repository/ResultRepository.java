@@ -1,5 +1,6 @@
 package org.lamisplus.modules.laboratory.repository;
 
+import org.lamisplus.modules.laboratory.domain.dto.SingleResultProjectionDTO;
 import org.lamisplus.modules.laboratory.domain.entity.LabOrder;
 import org.lamisplus.modules.laboratory.domain.entity.Result;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,5 +21,23 @@ public interface ResultRepository  extends JpaRepository<Result, Integer> {
     Optional<Result> findByUuid(String uuid);
     List<Result> findAllByFacilityId(Long facilityId);
     Optional<Result> findByIdAndArchived(int id, int archived);
-    Optional<Result> findByPatientUuidAndDateResultReceived(String patientUuid, LocalDateTime dateResultReceived);
+
+    @Query(value = "SELECT currentViralLoad, dateOfCurrentViralLoad FROM (\n" +
+            "SELECT personUuid, vlFacility, vlArchived, currentViralLoad, dateOfCurrentViralLoad FROM (\n" +
+            "         SELECT CAST(ls.date_sample_collected AS DATE ) AS dateOfCurrentViralLoadSample, sm.patient_uuid as personUuid , sm.facility_id as vlFacility, sm.archived as vlArchived, acode.display as viralLoadIndication, sm.result_reported as currentViralLoad,CAST(sm.date_result_reported AS DATE) as dateOfCurrentViralLoad\n" +
+            "         FROM public.laboratory_result  sm\n" +
+            "      INNER JOIN public.laboratory_test  lt on sm.test_id = lt.id\n" +
+            "  INNER JOIN public.laboratory_sample ls on ls.test_id = lt.id\n" +
+            "      INNER JOIN public.base_application_codeset  acode on acode.id =  lt.viral_load_indication\n" +
+            "         WHERE lt.lab_test_id = 16\n" +
+            "           AND  lt.viral_load_indication !=719\n" +
+            "           AND sm. date_result_reported IS NOT NULL\n" +
+            "           AND sm.result_reported is NOT NULL\n" +
+            "     )as vl_result\n" +
+            "   WHERE (vl_result.vlArchived = 0 OR vl_result.vlArchived is null)\n" +
+            "   \tAND personUuid = ?1 AND dateOfCurrentViralLoad = ?2\n" +
+            "     AND  vl_result.vlFacility = ?3 ORDER BY dateOfCurrentViralLoadSample DESC LIMIT 1\n" +
+            "\t ) lab", nativeQuery = true)
+    Optional <SingleResultProjectionDTO> findByPatientUuidAndDateResultReceived(String patientUuid, LocalDateTime dateResultReceived, Long facilityId);
+
 }
