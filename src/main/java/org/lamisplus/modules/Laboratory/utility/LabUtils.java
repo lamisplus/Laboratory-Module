@@ -1,4 +1,4 @@
-package org.lamisplus.modules.Laboratory.utility;
+package org.lamisplus.modules.laboratory.utility;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -1,4 +1,4 @@
-package org.lamisplus.modules.Laboratory.domain.dto;
+package org.lamisplus.modules.laboratory.domain.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

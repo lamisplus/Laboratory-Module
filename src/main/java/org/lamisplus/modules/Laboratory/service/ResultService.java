@@ -1,39 +1,52 @@
-package org.lamisplus.modules.Laboratory.service;
+package org.lamisplus.modules.laboratory.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.audit4j.core.util.Log;
-import org.lamisplus.modules.Laboratory.domain.dto.LastTestResult;
-import org.lamisplus.modules.Laboratory.domain.dto.ResultDTO;
-import org.lamisplus.modules.Laboratory.domain.entity.Result;
-import org.lamisplus.modules.Laboratory.domain.entity.Test;
-import org.lamisplus.modules.Laboratory.domain.mapper.LabMapper;
-import org.lamisplus.modules.Laboratory.repository.ResultRepository;
-import org.lamisplus.modules.Laboratory.repository.TestRepository;
+import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
+import org.lamisplus.modules.laboratory.domain.dto.ResultDTO;
+import org.lamisplus.modules.laboratory.domain.dto.ResultResponse;
+import org.lamisplus.modules.laboratory.domain.entity.LabOrder;
+import org.lamisplus.modules.laboratory.domain.entity.Result;
+import org.lamisplus.modules.laboratory.domain.entity.Test;
+import org.lamisplus.modules.laboratory.domain.mapper.LabMapper;
+import org.lamisplus.modules.laboratory.repository.ResultRepository;
+import org.lamisplus.modules.laboratory.repository.TestRepository;
+import org.lamisplus.modules.laboratory.domain.dto.LastTestResult;
+import org.lamisplus.modules.laboratory.domain.dto.ResultDTO;
+import org.lamisplus.modules.laboratory.domain.entity.Result;
+import org.lamisplus.modules.laboratory.domain.entity.Test;
+import org.lamisplus.modules.laboratory.domain.mapper.LabMapper;
+import org.lamisplus.modules.laboratory.repository.ResultRepository;
+import org.lamisplus.modules.laboratory.repository.TestRepository;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
 import org.lamisplus.modules.patient.repository.PersonRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.lamisplus.modules.Laboratory.utility.LabUtils.RESULT_REPORTED;
+import static org.lamisplus.modules.laboratory.utility.LabUtils.RESULT_REPORTED;
 
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class    ResultService {
+public class ResultService {
     private final ResultRepository repository;
     private final LabMapper labMapper;
     private final PersonRepository personRepository;
     private final TestRepository testRepository;
-    private  final UserService userService;
+    private final UserService userService;
 
-    public ResultDTO Save(ResultDTO resultDTO){
+    public ResultDTO Save(ResultDTO resultDTO) {
         Result result = labMapper.toResult(resultDTO);
 
         result.setUuid(UUID.randomUUID().toString());
@@ -47,21 +60,21 @@ public class    ResultService {
         result.setPatientId(test.getPatientId());
         result.setFacilityId(getCurrentUserOrganization());
         result.setArchived(0);
-        Log.info("FF: "+result);
+        Log.info("FF: " + result);
         return labMapper.toResultDto(repository.save(result));
     }
 
     private Long getCurrentUserOrganization() {
-        Optional<User> userWithRoles = userService.getUserWithRoles ();
-        return userWithRoles.map (User::getCurrentOrganisationUnitId).orElse (null);
+        Optional<User> userWithRoles = userService.getUserWithRoles();
+        return userWithRoles.map(User::getCurrentOrganisationUnitId).orElse(null);
     }
 
-    public ResultDTO Update(int order_id, ResultDTO resultDTO){
+    public ResultDTO Update(int order_id, ResultDTO resultDTO) {
         Result updated_result = labMapper.toResult(resultDTO);
         return labMapper.toResultDto(repository.save(updated_result));
     }
 
-    public String Delete(Integer id){
+    public String Delete(Integer id) {
         Result labOrder = repository.findByIdAndArchived(id, 0).orElse(null);
         //repository.delete(labOrder);
         labOrder.setArchived(1);
@@ -70,21 +83,29 @@ public class    ResultService {
         return id.toString() + " deleted successfully";
     }
 
-    public ResultDTO GetResultsById(Integer id){
+    public ResultDTO GetResultsById(Integer id) {
         return labMapper.toResultDto(repository.findByIdAndArchived(id, 0).orElse(null));
     }
 
-    public ResultDTO GetResultsByTestId(Integer TestId){
+    public ResultDTO GetResultsByTestId(Integer TestId) {
         List<Result> resultList = repository.findAllByTestIdAndArchived(TestId, 0);
 
-        if(resultList.size() > 0) {
+        if (resultList.size() > 0) {
             return labMapper.toResultDto(resultList.get(0));
-        }
-        else {
+        } else {
             return new ResultDTO();
         }
     }
 
+    public ResultDTO getResultByPatientUuidAndDateResultReceived(String patientUuid, String dateResultReceived) {
+        LocalDate date = LocalDate.parse(dateResultReceived);
+
+        Result result = repository
+                .findByPatientUuidAndDateResultReceived(patientUuid, date.atStartOfDay())
+                .orElseThrow(()-> new EntityNotFoundException(Result.class, "Result", dateResultReceived));
+
+        return labMapper.toResultDto(result);
+    }
     public LastTestResult convertResultToLastTestResult(Result result) {
         LastTestResult lastTestResult = new LastTestResult();
         lastTestResult.setResultReported(result.getResultReported());
@@ -94,5 +115,4 @@ public class    ResultService {
         lastTestResult.setPatientId(result.getPatientId());
         return lastTestResult;
     }
-
 }

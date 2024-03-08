@@ -9,6 +9,7 @@ menus:
     state: laboratory
     url: /across/resources/static/laboratory/index.html
 umdLocation: /across/resources/static/laboratory/index.html
+gitHubLink: https://api.github.com/repos/lamisplus/Laboratory-Module/releases/latest
 webModules:
   - breadcrumb: laboratory
     name: LaboratoryModule

@@ -17,5 +17,21 @@
                  stripComments="true"/>
     </changeSet>
 
+    <changeSet id="20240307-002" author="basil">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT 1 FROM laboratory_labtest
+                WHERE id IN (74, 75, 76, 77, 78, 79, 80, 81) LIMIT 1;
+            </sqlCheck>
+        </preConditions>
+        <sqlFile dbms="postgresql"
+                 path="updates-5.sql"
+                 relativeToChangelogFile="true"
+                 splitStatements="false"
+                 stripComments="true"/>
+    </changeSet>
+
+
+
 </databaseChangeLog>
 

@@ -10,6 +10,7 @@ insert into laboratory_labtest(id, lab_test_name, unit, labtestgroup_id) values(
 insert into laboratory_labtest(id, lab_test_name, unit, labtestgroup_id) values(68, 'TB LAMP', '+/-', 5);
 
 
+
 insert into laboratory_sampletype_labtest_link(labtest_id, sample_type_id)values(63,1);
 insert into laboratory_sampletype_labtest_link(labtest_id, sample_type_id)values(64,1);
 insert into laboratory_sampletype_labtest_link(labtest_id, sample_type_id)values(65,1);
@@ -17,6 +18,8 @@ insert into laboratory_sampletype_labtest_link(labtest_id, sample_type_id)values
 insert into laboratory_sampletype_labtest_link(labtest_id, sample_type_id)values(67,1);
 insert into laboratory_sampletype_labtest_link(labtest_id, sample_type_id)values(68,1);
 insert into laboratory_sampletype_labtest_link(labtest_id, sample_type_id)values(69,1);
+
+
 
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

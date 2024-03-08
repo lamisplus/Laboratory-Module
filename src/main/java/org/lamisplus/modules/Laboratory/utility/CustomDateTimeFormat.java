@@ -1,4 +1,4 @@
-package org.lamisplus.modules.Laboratory.utility;
+package org.lamisplus.modules.laboratory.utility;
 
 import lombok.RequiredArgsConstructor;
 

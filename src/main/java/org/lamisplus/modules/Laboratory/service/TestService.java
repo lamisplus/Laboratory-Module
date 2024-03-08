@@ -1,12 +1,12 @@
-package org.lamisplus.modules.Laboratory.service;
+package org.lamisplus.modules.laboratory.service;
 
 import lombok.RequiredArgsConstructor;
-import org.lamisplus.modules.Laboratory.domain.dto.TestDTO;
-import org.lamisplus.modules.Laboratory.domain.entity.LabOrder;
-import org.lamisplus.modules.Laboratory.domain.entity.Test;
-import org.lamisplus.modules.Laboratory.domain.mapper.LabMapper;
-import org.lamisplus.modules.Laboratory.repository.LabOrderRepository;
-import org.lamisplus.modules.Laboratory.repository.TestRepository;
+import org.lamisplus.modules.laboratory.domain.dto.TestDTO;
+import org.lamisplus.modules.laboratory.domain.entity.LabOrder;
+import org.lamisplus.modules.laboratory.domain.entity.Test;
+import org.lamisplus.modules.laboratory.domain.mapper.LabMapper;
+import org.lamisplus.modules.laboratory.repository.LabOrderRepository;
+import org.lamisplus.modules.laboratory.repository.TestRepository;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
 import org.springframework.stereotype.Service;
