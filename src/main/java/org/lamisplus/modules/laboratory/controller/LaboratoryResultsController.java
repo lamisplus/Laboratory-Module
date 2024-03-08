@@ -53,9 +53,8 @@ public class LaboratoryResultsController {
     }
 
     @GetMapping("/result/patient")
-
-    public ResponseEntity<ResultDTO> getResultByPatientUuidAndDateResultReceived(@RequestParam String patientUuid,
+    public ResultDTO getResultByPatientUuidAndDateResultReceived(@RequestParam String patientUuid,
                                                                                  @RequestParam String dateResultReceived) {
-        return ResponseEntity.ok().body(resultService.getResultByPatientUuidAndDateResultReceived(patientUuid, dateResultReceived));
+        return resultService.getResultByPatientUuidAndDateResultReceived(patientUuid, dateResultReceived);
     }
 }

@@ -3,8 +3,10 @@ package org.lamisplus.modules.laboratory.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.audit4j.core.util.Log;
+import org.lamisplus.modules.base.controller.apierror.EntityNotFoundException;
 import org.lamisplus.modules.laboratory.domain.dto.ResultDTO;
 import org.lamisplus.modules.laboratory.domain.dto.ResultResponse;
+import org.lamisplus.modules.laboratory.domain.entity.LabOrder;
 import org.lamisplus.modules.laboratory.domain.entity.Result;
 import org.lamisplus.modules.laboratory.domain.entity.Test;
 import org.lamisplus.modules.laboratory.domain.mapper.LabMapper;
@@ -88,17 +90,12 @@ public class ResultService {
     }
 
     public ResultDTO getResultByPatientUuidAndDateResultReceived(String patientUuid, String dateResultReceived) {
-
         LocalDate date = LocalDate.parse(dateResultReceived);
 
-        Optional<Result> result = repository.findByPatientUuidAndDateResultReceived(patientUuid, date.atStartOfDay());
-        if (!result.isPresent()) {
+        Result result = repository
+                .findByPatientUuidAndDateResultReceived(patientUuid, date.atStartOfDay())
+                .orElseThrow(()-> new EntityNotFoundException(Result.class, "Result", dateResultReceived));
 
-            //return StringUtils.hasText(resultDTO.getResultReported()) ? ResultResponse.builder().result(resultDTO.getResultReported()).build() : ResultResponse.builder().result(response).build();
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No record found for Result");
-        }
-
-
-        return labMapper.toResultDto(result.get());
+        return labMapper.toResultDto(result);
     }
 }
