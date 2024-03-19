@@ -1,4 +1,4 @@
-basePackage: org.lamisplus.modules.laboratory
+basePackage: org.lamisplus.modules.Laboratory
 name: LaboratoryModule
 dependencies: {PatientModule: 2.0.5}
 store: true
