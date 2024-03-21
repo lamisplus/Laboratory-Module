@@ -1,0 +1,1 @@
+update laboratory_test set archived = 0 where archived is null;
