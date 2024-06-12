@@ -12,6 +12,7 @@ public class TestDTO {
     private Integer patientId;
     private Integer labTestId;
     private String description;
+    private String clinicalNote;
     private String labNumber;
     private Integer labTestGroupId;
     private Integer orderPriority;
