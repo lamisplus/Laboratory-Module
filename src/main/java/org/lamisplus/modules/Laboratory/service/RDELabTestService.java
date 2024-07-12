@@ -54,6 +54,7 @@ public class RDELabTestService {
             test.setLabTestGroupId(dto.getLabTestGroupId());
             test.setViralLoadIndication(dto.getViralLoadIndication());
             test.setDescription(dto.getComments());
+            test.setClinicalNote(dto.getComments());
 
             if(dto.getResult() == null || dto.getResult().isEmpty() || dto.getResult().trim().isEmpty()) {
                 test.setLabTestOrderStatus(SAMPLE_COLLECTED);

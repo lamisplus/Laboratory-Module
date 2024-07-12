@@ -22,6 +22,8 @@ public class Test extends Audit<String> {
     private Integer labTestId;
     @Column(name = "description")
     private String description;
+    @Column(name = "clinical_note")
+    private String clinicalNote;
     @Column(name = "lab_number")
     private String labNumber;
     @Column(name = "lab_test_group_id")

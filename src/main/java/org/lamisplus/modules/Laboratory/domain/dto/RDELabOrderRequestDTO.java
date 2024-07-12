@@ -28,7 +28,7 @@ public class RDELabOrderRequestDTO {
     private String checkedBy;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate dateChecked;
-    private String comments;
+    private String comments;//pass clinicalNote through comments
     private String clinicianName;
     private Integer viralLoadIndication;
     private Integer sampleTypeId;
