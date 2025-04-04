@@ -21,7 +21,7 @@ public class Sample extends Audit<String> {
     @Column(name = "uuid")
     private String uuid;
     @Column(name = "sample_number")
-    private String SampleNumber;
+    private String sampleNumber;
     @Column(name = "sample_type_id")
     private Integer sampleTypeId;
     @Column(name = "sample_collection_mode")
