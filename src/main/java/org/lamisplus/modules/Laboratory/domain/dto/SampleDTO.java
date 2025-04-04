@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 public class SampleDTO {
     private Integer id;
-    private String SampleNumber;
+    private String sampleNumber;
     private Integer sampleTypeId;
     private Integer sampleCollectionMode;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
