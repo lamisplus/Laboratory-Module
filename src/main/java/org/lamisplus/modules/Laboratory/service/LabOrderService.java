@@ -65,7 +65,7 @@ public class LabOrderService {
                 test.setPatientUuid(person.getUuid());
             }
 
-            LogInfo("LAB_ORDER", labOrderDTO);
+//            LogInfo("LAB_ORDER", labOrderDTO);
             return labMapper.toLabOrderResponseDto(labOrderRepository.save(labOrder));
         }
         catch(Exception e){
@@ -90,11 +90,9 @@ public class LabOrderService {
 
     public String Delete(Integer id){
         LabOrder labOrder = labOrderRepository.findById(id).orElse(null);
-        Log.info("delete here "+id);
         //labOrderRepository.delete(labOrder);
         labOrder.setArchived(1);
         labOrderRepository.save(labOrder);
-        Log.info(labOrder);
         return id + " deleted successfully";
     }
 

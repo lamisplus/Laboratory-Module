@@ -69,7 +69,6 @@ public class LaboratoryResultsController {
         lastTestResult.setId(result.getId());
         lastTestResult.setPatientUuid(result.getPatientUuid());
         lastTestResult.setPatientId(result.getPatientId());
-        Log.info("Last test result ****** {} ", lastTestResult);
         if (lastTestResult != null) {
             return new ResponseEntity<>(lastTestResult, HttpStatus.OK);
         } else {
