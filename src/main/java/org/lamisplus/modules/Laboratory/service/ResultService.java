@@ -37,7 +37,6 @@ public class    ResultService {
         Result result = labMapper.toResult(resultDTO);
 
         result.setUuid(UUID.randomUUID().toString());
-        log.info("result {}", result);
         Test test = testRepository.findByIdAndArchived(result.getTestId(), 0).orElse(null);
         assert test != null;
         test.setLabTestOrderStatus(RESULT_REPORTED);
@@ -47,7 +46,6 @@ public class    ResultService {
         result.setPatientId(test.getPatientId());
         result.setFacilityId(getCurrentUserOrganization());
         result.setArchived(0);
-        Log.info("FF: "+result);
         return labMapper.toResultDto(repository.save(result));
     }
 

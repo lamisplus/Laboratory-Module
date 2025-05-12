@@ -20,7 +20,7 @@ public class VerifiedSampleService {
     private final LabMapper labMapper;
     private final TestRepository testRepository;
 
-    public VerifiedSampleDTO Save(VerifiedSampleDTO verifiedSampleDTO, Integer sampleId){
+    public VerifiedSampleDTO Save(VerifiedSampleDTO verifiedSampleDTO, Integer sampleId) {
         Sample sample = repository.findById(sampleId).orElse(null);
         sample.setDateSampleVerified(verifiedSampleDTO.getDateSampleVerified());
         sample.setSampleAccepted(verifiedSampleDTO.getSampleAccepted());
@@ -34,11 +34,18 @@ public class VerifiedSampleService {
         return labMapper.toVerifiedSampleDto(repository.save(sample));
     }
 
-    public String Delete(Integer sampleId){
+    public String Delete(Integer sampleId) {
         Sample sample = repository.findById(sampleId).orElse(null);
         sample.setDateSampleVerified(null);
         sample.setCommentSampleVerified(null);
 
         return "Sample verification deleted successfully";
+    }
+
+    public boolean doesSampleNumberExist(String sampleNumber) {
+        if (sampleNumber == null || sampleNumber.isEmpty()) {
+            return false;
+        }
+        return repository.existsBySampleNumberAndArchived(sampleNumber);
     }
 }
