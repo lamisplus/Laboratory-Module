@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.lamisplus.modules.Laboratory.domain.dto.VerifiedSampleDTO;
 import org.lamisplus.modules.Laboratory.service.VerifiedSampleService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -15,12 +16,18 @@ public class LaboratorySampleVerificationController {
 
 
     @PostMapping("/verified-samples/{sample_id}")
-    public VerifiedSampleDTO SaveVerifiedSample(@PathVariable int sample_id, @RequestBody VerifiedSampleDTO verifiedSampleDTO){
+    public VerifiedSampleDTO SaveVerifiedSample(@PathVariable int sample_id, @RequestBody VerifiedSampleDTO verifiedSampleDTO) {
         return verifiedSampleService.Save(verifiedSampleDTO, sample_id);
     }
 
     @DeleteMapping("/verified-samples/{sample_id}")
-    public String DeleteVerifiedSample(@PathVariable Integer sample_id){
+    public String DeleteVerifiedSample(@PathVariable Integer sample_id) {
         return verifiedSampleService.Delete(sample_id);
+    }
+
+    @GetMapping("/check-sample-number")
+    public ResponseEntity<Boolean> checkSampleNumber(@RequestParam String sampleNumber) {
+        boolean exists = verifiedSampleService.doesSampleNumberExist(sampleNumber);
+        return ResponseEntity.ok(exists);
     }
 }

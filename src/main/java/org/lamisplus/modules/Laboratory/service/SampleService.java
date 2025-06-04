@@ -28,10 +28,10 @@ public class SampleService {
     private final SampleRepository repository;
     private final LabMapper labMapper;
     private final TestRepository testRepository;
-    private  final UserService userService;
+    private final UserService userService;
     private final PCRLabRepository pcrLabRepository;
 
-    public SampleDTO Save(String labNumber, SampleDTO sampleDTO){
+    public SampleDTO Save(String labNumber, SampleDTO sampleDTO) {
         Sample sample = labMapper.tosSample(sampleDTO);
         //sample.setSampleCollectedBy(SecurityUtils.getCurrentUserLogin().orElse(""));
         sample.setUuid(UUID.randomUUID().toString());
@@ -46,33 +46,33 @@ public class SampleService {
         return labMapper.tosSampleDto(repository.save(sample));
     }
 
-    public List<SampleDTO> SaveSamples(String labNumber, List<SampleDTO> sampleDTOs){
+    public List<SampleDTO> SaveSamples(String labNumber, List<SampleDTO> sampleDTOs) {
         List<SampleDTO> saved_samples = new ArrayList<>();
-        for(SampleDTO dto:sampleDTOs){
+        for (SampleDTO dto : sampleDTOs) {
             saved_samples.add(Save(labNumber, dto));
         }
         return saved_samples;
     }
 
     private Long getCurrentUserOrganization() {
-        Optional<User> userWithRoles = userService.getUserWithRoles ();
-        return userWithRoles.map (User::getCurrentOrganisationUnitId).orElse (null);
+        Optional<User> userWithRoles = userService.getUserWithRoles();
+        return userWithRoles.map(User::getCurrentOrganisationUnitId).orElse(null);
     }
 
-    public void SaveLabNumber(int testId, String labNumber, int orderStatus){
+    public void SaveLabNumber(int testId, String labNumber, int orderStatus) {
         Test test = testRepository.findById(testId).orElse(null);
         test.setLabNumber(labNumber);
         test.setLabTestOrderStatus(orderStatus);
         testRepository.save(test);
     }
 
-    public SampleDTO Update(int orderId, String labNumber, SampleDTO sampleDTO){
+    public SampleDTO Update(int orderId, String labNumber, SampleDTO sampleDTO) {
         Sample updated_sample = labMapper.tosSample(sampleDTO);
         SaveLabNumber(updated_sample.getTestId(), labNumber, SAMPLE_COLLECTED);
         return labMapper.tosSampleDto(repository.save(updated_sample));
     }
 
-    public String Delete(Integer id){
+    public String Delete(Integer id) {
         Sample labOrder = repository.findById(id).orElse(null);
         //repository.delete(labOrder);
         labOrder.setArchived(1);
@@ -81,13 +81,11 @@ public class SampleService {
         return id + " deleted successfully";
     }
 
-    public SampleDTO FindByTestId(int id){
+    public SampleDTO FindByTestId(int id) {
         List<Sample> sampleList = repository.findAllByTestIdAndArchived(id, 0);
-        if(sampleList.size() > 0) {
+        if (sampleList.size() > 0) {
             return labMapper.tosSampleDto(sampleList.get(0));
-        }
-        else
-        {
+        } else {
             return new SampleDTO();
         }
     }
@@ -97,7 +95,7 @@ public class SampleService {
         return labMapper.tosSampleDto(sample);
     }
 
-    public List<PCRLab> getAllPCRLabs(){
+    public List<PCRLab> getAllPCRLabs() {
         return pcrLabRepository.allpcrlabs();
     }
 
@@ -106,4 +104,6 @@ public class SampleService {
         return pcrLabRepository.findById(id)
                 .orElseThrow(() -> new Exception("LIMSPCRLab NOT FOUND"));
     }
+
+
 }

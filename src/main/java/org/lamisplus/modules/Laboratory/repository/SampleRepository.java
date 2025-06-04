@@ -3,6 +3,7 @@ package org.lamisplus.modules.Laboratory.repository;
 import org.lamisplus.modules.Laboratory.domain.entity.Sample;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,4 +20,7 @@ public interface SampleRepository  extends JpaRepository<Sample, Integer> {
     Optional<Sample> findByUuid(String uuid);
     List<Sample> findAllByFacilityId(Long facilityId);
     Optional<Sample> findByIdAndArchived(int id, int archived);
+
+    @Query(value = "SELECT EXISTS(SELECT 1 FROM laboratory_sample WHERE sample_number = :sampleNumber AND archived = 0)", nativeQuery = true)
+    boolean existsBySampleNumberAndArchived(@Param("sampleNumber") String sampleNumber);
 }
