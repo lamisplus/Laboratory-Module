@@ -65,7 +65,7 @@ public class LabOrderService {
                 test.setPatientUuid(person.getUuid());
             }
 
-            LogInfo("LAB_ORDER", labOrderDTO);
+//            LogInfo("LAB_ORDER", labOrderDTO);
             return labMapper.toLabOrderResponseDto(labOrderRepository.save(labOrder));
         }
         catch(Exception e){
@@ -90,11 +90,9 @@ public class LabOrderService {
 
     public String Delete(Integer id){
         LabOrder labOrder = labOrderRepository.findById(id).orElse(null);
-        Log.info("delete here "+id);
         //labOrderRepository.delete(labOrder);
         labOrder.setArchived(1);
         labOrderRepository.save(labOrder);
-        Log.info(labOrder);
         return id + " deleted successfully";
     }
 
@@ -270,7 +268,6 @@ public class LabOrderService {
 
         for (LabOrder order: orders) {
             PersonResponseDto personResponseDTO = personService.getPersonById((long) order.getPatientId());
-            Log.info("PERSON: "+personResponseDTO);
             PatientLabOrderDTO dto = new PatientLabOrderDTO();
             dto.setPatientAddress(jsonNodeTransformer.getNodeValue(personResponseDTO.getAddress(), "address", "city", true));
             dto.setPatientDob(personResponseDTO.getDateOfBirth());
@@ -281,13 +278,10 @@ public class LabOrderService {
             dto.setPatientHospitalNumber(jsonNodeTransformer.getNodeValue(personResponseDTO.getIdentifier(), "identifier", "value", true));
             dto.setPatientLastName(personResponseDTO.getSurname());
             dto.setPatientPhoneNumber(jsonNodeTransformer.getNodeValue(personResponseDTO.getContactPoint(),"contactPoint", "value", true));
-            Log.info("HERE 1: "+personResponseDTO);
             dto.setLabOrder(AppendAdditionalTestDetails(labMapper.toLabOrderResponseDto(order)));
 
             patientLabOrderDTOS.add(dto);
         }
-
-        Log.info("ORDER: "+patientLabOrderDTOS);
         return patientLabOrderDTOS;
     }
 

@@ -201,6 +201,7 @@ public class RDELabTestService {
         sample.setDateSampleCollected(rdeTestDTO.getSampleCollectionDate());
         sample.setSampleCollectedBy(rdeTestDTO.getSampleCollectedBy());
         sample.setTestId(test.getId());
+        sample.setSampleNumber(rdeTestDTO.getSampleNumber());
         sample.setSampleTypeId(rdeTestDTO.getSampleTypeId());
         sampleService.Save(rdeTestDTO.getLabNumber(), sample);
 
