@@ -16,7 +16,7 @@ const divStyle = {
 };
 
 const Home = (props) => {
-    const [key, setKey] = useState('collection');
+    const [key, setKey] = useState("home");
     const [permissions, setPermissions] = useState([]);
     //const urlIndex = getQueryParams("tab", props.location.search); 
     const urlTabs = props.location && props.location.state ? props.location.state : null ;
@@ -36,12 +36,13 @@ const Home = (props) => {
 
   useEffect ( () => {
   userPermission()
-    switch(urlTabs){  
+    switch (urlTabs) { 
+      case "checked-in": return setKey('home')
       case "collect-sample": return setKey('collection')
       case "verification": return setKey('verification')
       case "result": return setKey('result')
       
-      default: return setKey('collection')
+      default: return setKey('home')
     }
   }, [urlTabs]);
 
@@ -62,9 +63,9 @@ const Home = (props) => {
                     onSelect={(k) => setKey(k)}
                     className="mb-3"
                     >
-                    {/* <Tab eventKey="home" title="Checked In Patients">                   
+                    <Tab eventKey="home" title="Checked In Patients">                   
                       <CheckInPatients labObj={labObj} />
-                    </Tab> */}
+                    </Tab>
 
                     <Tab eventKey="collection" title="Test Orders">                   
                       <LabTestOrderSearch />

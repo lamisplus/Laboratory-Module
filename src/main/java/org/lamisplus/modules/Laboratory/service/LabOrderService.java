@@ -21,6 +21,7 @@ import org.lamisplus.modules.patient.repository.PersonRepository;
 import org.lamisplus.modules.patient.service.PersonService;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -46,33 +47,108 @@ public class LabOrderService {
     private final SampleTypeRepository sampleTypeRepository;
     private final JsonNodeTransformer jsonNodeTransformer;
 
-    public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
-        try {
-            Person person = personRepository.findById((long) labOrderDTO.getPatientId()).orElse(null);
 
-            LabOrder labOrder = labMapper.toLabOrder(labOrderDTO);
-            //labOrder.setUserId(SecurityUtils.getCurrentUserLogin().orElse(""));
-            labOrder.setUuid(UUID.randomUUID().toString());
-            assert person != null;
-            labOrder.setPatientUuid(person.getUuid());
-            labOrder.setFacilityId(getCurrentUserOrganization());
+//@Transactional
+public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
+    try {
+        Log.info("=== Starting Lab Order Save Process ===");
+        Log.info("Patient ID: " + labOrderDTO.getPatientId());
+        Log.info("Visit ID: " + labOrderDTO.getVisitId());
 
-            for (Test test : labOrder.getTests()) {
-                test.setUuid(UUID.randomUUID().toString());
-                test.setLabTestOrderStatus(PENDING_SAMPLE_COLLECTION);
-                test.setPatientId(labOrder.getPatientId());
-                test.setFacilityId(getCurrentUserOrganization());
-                test.setPatientUuid(person.getUuid());
+        if (labOrderDTO.getTests() == null || labOrderDTO.getTests().isEmpty()) {
+            throw new RuntimeException("Tests list cannot be null or empty");
+        }
+
+        // Find person
+        Person person = personRepository.findById((long) labOrderDTO.getPatientId()).orElse(null);
+        if (person == null) {
+            throw new RuntimeException("Patient not found with ID: " + labOrderDTO.getPatientId());
+        }
+        Log.info("Found person: " + person.getUuid());
+
+        // Create LabOrder entity manually
+        LabOrder labOrder = new LabOrder();
+        labOrder.setUuid(UUID.randomUUID().toString());
+        labOrder.setPatientId(labOrderDTO.getPatientId());
+        labOrder.setVisitId(labOrderDTO.getVisitId());
+        labOrder.setOrderDate(labOrderDTO.getOrderDate());
+        labOrder.setPatientUuid(person.getUuid());
+        labOrder.setFacilityId(getCurrentUserOrganization());
+        labOrder.setArchived(0);
+
+        // Set optional fields if they exist
+        if (labOrderDTO.getOrderedDate() != null) {
+            labOrder.setOrderedDate(labOrderDTO.getOrderedDate());
+        }
+        if (labOrderDTO.getLabOrderIndication() != null) {
+            labOrder.setLabOrderIndication(labOrderDTO.getLabOrderIndication());
+        }
+
+        Log.info("Created LabOrder entity with UUID: " + labOrder.getUuid());
+
+        // Create Test entities manually
+        List<Test> tests = new ArrayList<>();
+        for (TestDTO testDTO : labOrderDTO.getTests()) {
+            Test test = new Test();
+
+            test.setUuid(UUID.randomUUID().toString());
+            test.setPatientId(labOrderDTO.getPatientId());
+            test.setLabTestId(testDTO.getLabTestId());
+            test.setDescription(testDTO.getDescription());
+            test.setLabTestGroupId(testDTO.getLabTestGroupId());
+            test.setOrderPriority(testDTO.getOrderPriority());
+            test.setLabTestOrderStatus(PENDING_SAMPLE_COLLECTION);
+            test.setPatientUuid(person.getUuid());
+            test.setFacilityId(getCurrentUserOrganization());
+            test.setArchived(0);
+
+            // Set optional fields if they exist
+            if (testDTO.getClinicalNote() != null) {
+                test.setClinicalNote(testDTO.getClinicalNote());
+            }
+            if (testDTO.getLabNumber() != null) {
+                test.setLabNumber(testDTO.getLabNumber());
+            }
+            if (testDTO.getViralLoadIndication() != null) {
+                test.setViralLoadIndication(testDTO.getViralLoadIndication());
+            } else {
+                test.setViralLoadIndication(0);
             }
 
-//            LogInfo("LAB_ORDER", labOrderDTO);
-            return labMapper.toLabOrderResponseDto(labOrderRepository.save(labOrder));
+            tests.add(test);
+            Log.info("Created test with UUID: " + test.getUuid() +
+                    ", LabTestId: " + test.getLabTestId() +
+                    ", GroupId: " + test.getLabTestGroupId());
         }
-        catch(Exception e){
-            Log.error(e);
-            return null;
+
+        labOrder.setTests(tests);
+
+        Log.info("About to save lab order with " + tests.size() + " tests");
+
+        LabOrder savedLabOrder = labOrderRepository.save(labOrder);
+
+        if (savedLabOrder == null || savedLabOrder.getId() == null) {
+            throw new RuntimeException("Failed to save lab order - repository returned null or invalid result");
         }
+
+        Log.info("Successfully saved lab order with ID: " + savedLabOrder.getId());
+        Log.info("Saved " + (savedLabOrder.getTests() != null ? savedLabOrder.getTests().size() : 0) + " tests");
+
+        LabOrderResponseDTO response = labMapper.toLabOrderResponseDto(savedLabOrder);
+        if (response == null) {
+            throw new RuntimeException("Failed to create response DTO");
+        }
+
+        Log.info("Successfully created response DTO with ID: " + response.getId());
+        Log.info("=== Lab Order Save Process Completed Successfully ===");
+
+        return response;
+
+    } catch(Exception e){
+        Log.error("Exception in Save method: " + e.getMessage(), e);
+        throw new RuntimeException("Failed to save lab order: " + e.getMessage(), e);
     }
+}
 
     private Long getCurrentUserOrganization() {
         Optional<User> userWithRoles = userService.getUserWithRoles ();

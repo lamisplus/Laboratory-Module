@@ -1,13 +1,20 @@
 package org.lamisplus.modules.Laboratory.controller;
 
+import io.micrometer.core.instrument.util.JsonUtils;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.audit4j.core.util.Log;
 import org.lamisplus.modules.Laboratory.domain.dto.*;
 import org.lamisplus.modules.Laboratory.service.LabOrderService;
 import org.lamisplus.modules.Laboratory.service.TestService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -19,9 +26,42 @@ public class LaboratoryOrdersController {
 
 
     @PostMapping("/orders")
-    public LabOrderResponseDTO SaveLabOrder(@RequestBody LabOrderDTO labOrder){
-        return labOrderService.Save(labOrder);
+    public ResponseEntity<?> SaveLabOrder(@RequestBody LabOrderDTO labOrder){
+        try {
+
+            Log.info("Received lab order request for patient ID: " + labOrder.getPatientId() +
+                    ", visit ID: " + labOrder.getVisitId());
+
+            if (labOrder.getTests() != null) {
+                Log.info("Number of tests: " + labOrder.getTests().size());
+                for (int i = 0; i < labOrder.getTests().size(); i++) {
+                    TestDTO test = labOrder.getTests().get(i);
+                    Log.info("Test " + (i+1) + " - LabTestId: " + test.getLabTestId() +
+                            ", GroupId: " + test.getLabTestGroupId() +
+                            ", Priority: " + test.getOrderPriority());
+                }
+            }
+
+            LabOrderResponseDTO response = labOrderService.Save(labOrder);
+
+            if (response != null) {
+                Log.info("Lab order saved successfully with ID: " + response.getId());
+                return ResponseEntity.ok(response);
+            } else {
+                Log.error("Lab order service returned null response");
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put("error", "Failed to save lab order - service returned null");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+            }
+        } catch (Exception e) {
+            Log.error("Error in SaveLabOrder controller: " + e.getMessage(), e);
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Server error: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
+
+
 
     @PutMapping("/orders/{id}")
     public LabOrderResponseDTO UpdateLabOrder(@PathVariable int id, @RequestBody LabOrderDTO labOrder){
