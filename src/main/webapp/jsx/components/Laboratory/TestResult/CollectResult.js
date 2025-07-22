@@ -146,7 +146,7 @@ const ResultReporting = (props) => {
         }else if(e===4){
           return <p><Badge  color="light">Sample Rejected</Badge></p>
         }else if(e===5){
-          return <p><Badge  color="light">Result Available</Badge></p>
+          return <p><Badge  color="primary">Result Available</Badge></p>
         }else{
           return <p>{""}</p>
         }

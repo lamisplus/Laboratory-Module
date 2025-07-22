@@ -112,6 +112,27 @@ public class LaboratoryOrdersController {
         return labOrderService.GetOrdersPendingResults(searchParam, pageNo, pageSize);
     }
 
+    @GetMapping("/orders/pending-sample-collection/patients/{patientId}")
+    public LabOrderListMetaDataDTO GetOrdersPendingSampleCollectionByPatient(@PathVariable Integer patientId,
+            @RequestParam(defaultValue = "0") Integer pageNo,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        return labOrderService.GetOrdersPendingSampleCollectionByPatient(patientId, pageNo, pageSize);
+    }
+
+    @GetMapping("/orders/pending-sample-verification/patients/{patientId}")
+    public LabOrderListMetaDataDTO GetOrdersPendingSampleVerificationByPatient(@PathVariable Integer patientId,
+            @RequestParam(defaultValue = "0") Integer pageNo,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        return labOrderService.GetOrdersPendingSampleVerificationByPatient(patientId, pageNo, pageSize);
+    }
+
+    @GetMapping("/orders/pending-results/patients/{patientId}")
+    public LabOrderListMetaDataDTO GetOrdersPendingResultsByPatient(@PathVariable Integer patientId,
+            @RequestParam(defaultValue = "0") Integer pageNo,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        return labOrderService.GetOrdersPendingResultsByPatient(patientId, pageNo, pageSize);
+    }
+
     @PostMapping("/orders/tests")
     public TestDTO SaveTest(@RequestBody TestDTO test){
         return testService.Save(test);

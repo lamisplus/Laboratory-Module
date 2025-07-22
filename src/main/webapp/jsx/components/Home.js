@@ -1,14 +1,21 @@
 import React, {useState, Fragment, useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
-import { Row, Col, Card,  Tab, Tabs, } from "react-bootstrap";
-import LabTestOrderSearch from './Laboratory/Testorders/LabTestOrderSearch';
-import LabTestResultSearch from './Laboratory/TestResult/LabTestResultSearch';
-import LabTestVerifySampleSearch from './Laboratory/Sampleverifications/LabTestVerifySampleSearch';
-import Config from './Laboratory/Configuration/Config';
-import CheckInPatients from './CheckInPatients/Index';
-import {labObj} from './LabObj'
-import axios from "axios";
+import {
+  Row,
+  Col,
+  Card,
+  CardBody,
+  Nav,
+  NavItem,
+  NavLink,
+  TabContent,
+  TabPane,
+} from "reactstrap";
+import CheckInPatients from "./CheckInPatients/Index";
+import { labObj } from "./LabObj";
+
 import {token, url } from "../../api";
+import axios from "axios";
 
 const divStyle = {
   borderRadius: "2px",
@@ -16,82 +23,71 @@ const divStyle = {
 };
 
 const Home = (props) => {
-    const [key, setKey] = useState("home");
-    const [permissions, setPermissions] = useState([]);
-    //const urlIndex = getQueryParams("tab", props.location.search); 
-    const urlTabs = props.location && props.location.state ? props.location.state : null ;
+  const [permissions, setPermissions] = useState([]);
+  const [activeTab, setActiveTab] = useState("checked-in-patients");
 
-    const userPermission =()=>{
-        axios
-            .get(`${url}account`,
-                { headers: {"Authorization" : `Bearer ${token}`} }
-            )
-            .then((response) => {
-                //console.log("permission", response.data.permissions)
-                setPermissions(response.data.permissions);
-            })
-            .catch((error) => {
-            });
-    }
+  const userPermission = () => {
+    axios
+      .get(`${url}account`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((response) => {
+        setPermissions(response.data.permissions);
+      })
+      .catch((error) => {});
+  };
 
-  useEffect ( () => {
-  userPermission()
-    switch (urlTabs) { 
-      case "checked-in": return setKey('home')
-      case "collect-sample": return setKey('collection')
-      case "verification": return setKey('verification')
-      case "result": return setKey('result')
-      
-      default: return setKey('home')
-    }
-  }, [urlTabs]);
+  useEffect(() => {
+    userPermission();
+  }, []);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
 
   return (
     <Fragment>
-     
       <Row>
-       
         <Col xl={12}>
           <Card style={divStyle}>
-            
-            <Card.Body>
-              {/* <!-- Nav tabs --> */}
-              <div className="custom-tab-1">
-                <Tabs
-                    id="controlled-tab-example"
-                    activeKey={key}
-                    onSelect={(k) => setKey(k)}
-                    className="mb-3"
-                    >
-                    <Tab eventKey="home" title="Checked In Patients">                   
-                      <CheckInPatients labObj={labObj} />
-                    </Tab>
+            <CardBody>
+              {/* Laboratory Tabs */}
+              <Nav tabs>
+                <NavItem>
+                  <NavLink
+                    className={
+                      activeTab === "checked-in-patients" ? "active" : ""
+                    }
+                    onClick={() => handleTabChange("checked-in-patients")}
+                    style={{ cursor: "pointer" }}
+                  >
+                    Patient Test Orders
+                  </NavLink>
+                </NavItem>
+                <NavItem>
+                  <NavLink
+                    className={
+                      activeTab === "laboratory-history" ? "active" : ""
+                    }
+                    onClick={() => handleTabChange("laboratory-history")}
+                    style={{ cursor: "pointer" }}
+                  >
+                    Laboratory History
+                  </NavLink>
+                </NavItem>
+              </Nav>
 
-                    <Tab eventKey="collection" title="Test Orders">                   
-                      <LabTestOrderSearch />
-                    </Tab>
-
-                    { permissions.includes('Verify_samples') || permissions.includes("all_permission") &&
-                    <Tab eventKey="verification" title="Sample Verification">
-                      <LabTestVerifySampleSearch/>
-                    </Tab>
-                    }
-                    { permissions.includes('View_sample_results') || permissions.includes("all_permission") &&
-                    <Tab eventKey="result" title="Result Reporting">
-                      <LabTestResultSearch />
-                    </Tab>
-                    }
-                    { permissions.includes('lab_configurations') || permissions.includes("all_permission") &&
-                    <Tab eventKey="config" title="Configurations">
-                      <Config />
-                    </Tab>
-                    }
-                    </Tabs>
-              </div>
-            </Card.Body>
+              <TabContent activeTab={activeTab} className="mt-3">
+                <TabPane tabId="checked-in-patients">
+                  <CheckInPatients labObj={labObj} permissions={permissions} />
+                </TabPane>
+                <TabPane tabId="laboratory-history">
+                  <div className="text-center p-5">
+                    <h4>Laboratory History</h4>
+                  </div>
+                </TabPane>
+              </TabContent>
+            </CardBody>
           </Card>
         </Col>
-        
       </Row>
     </Fragment>
   );

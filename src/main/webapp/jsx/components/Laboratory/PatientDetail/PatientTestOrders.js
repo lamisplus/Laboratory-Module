@@ -1,8 +1,18 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import MaterialTable from "material-table";
-import { Link } from "react-router-dom";
 import { forwardRef } from "react";
+import { Card, CardBody } from "reactstrap";
+import { toast } from "react-toastify";
+import axios from "axios";
+import { token, url } from "../../../../api";
+import MatButton from "@material-ui/core/Button";
+import VisibilityIcon from "@material-ui/icons/Visibility";
+import ArrowBackIcon from "@material-ui/icons/ArrowBack";
+import RefreshIcon from "@material-ui/icons/Refresh";
+import SampleList from "../SampleCollection/SampleList";
+import { useLaboratory } from "../../../context/LaboratoryContext";
 
+// Material-UI icons for table
 import AddBox from "@material-ui/icons/AddBox";
 import ArrowUpward from "@material-ui/icons/ArrowUpward";
 import Check from "@material-ui/icons/Check";
@@ -18,13 +28,6 @@ import Remove from "@material-ui/icons/Remove";
 import SaveAlt from "@material-ui/icons/SaveAlt";
 import Search from "@material-ui/icons/Search";
 import ViewColumn from "@material-ui/icons/ViewColumn";
-import VisibilityIcon from "@material-ui/icons/Visibility";
-import axios from "axios";
-
-import MatButton from "@material-ui/core/Button";
-import { Card, CardBody } from "reactstrap";
-import { toast } from "react-toastify";
-import { token, url } from "../../../../api";
 
 const tableIcons = {
   Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
@@ -50,18 +53,41 @@ const tableIcons = {
   ViewColumn: forwardRef((props, ref) => <ViewColumn {...props} ref={ref} />),
 };
 
-const PatientSearch = (props) => {
-  const tableRef = useRef(null);
+const PatientTestOrders = ({ patient, permissions }) => {
+  const { 
+    selectedOrder, 
+    setSelectedOrder, 
+    clearSelectedOrder,
+    refreshTestOrders,
+    refreshFlags 
+  } = useLaboratory();
+  
   const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
   const [errorCount, setErrorCount] = useState(0);
 
-  useEffect(() => {
-    localStorage.clear();
-  }, []);
+  // Handle order selection for sample collection
+  const handleViewOrder = (orderData) => {
+    console.log("Viewing order for sample collection:", orderData);
+    setSelectedOrder(orderData);
+  };
 
-  const handlePulledData = (query) =>
+  // Handle back to orders view
+  const handleBackToOrders = () => {
+    clearSelectedOrder();
+  };
+
+  // Fetch patient-specific test orders from pending-sample-collection
+  const handlePulledData = useCallback((query) =>
     new Promise((resolve, reject) => {
+      if (!patient?.id) {
+        resolve({
+          data: [],
+          page: 0,
+          totalCount: 0,
+        });
+        return;
+      }
+
       setLoading(true);
 
       // Add timeout to prevent indefinite loading
@@ -79,9 +105,7 @@ const PatientSearch = (props) => {
 
       axios
         .get(
-          `${url}laboratory/orders/pending-sample-collection?searchParam=${
-            query.search || ""
-          }&pageNo=${query.page}&pageSize=${query.pageSize}`,
+          `${url}laboratory/orders/pending-sample-collection/patients/${patient.id}?pageNo=${query.page}&pageSize=${query.pageSize}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -89,7 +113,7 @@ const PatientSearch = (props) => {
         .then((resp) => {
           clearTimeout(timeoutId);
           setLoading(false);
-          console.log("Pending orders response:", resp);
+          console.log("Patient orders response:", resp);
 
           if (
             !resp.data ||
@@ -104,90 +128,74 @@ const PatientSearch = (props) => {
             return;
           }
 
-          // Filter out records with invalid patient data
-          const validRecords = resp.data.records.filter((row) => {
-            if (
-              !row.patientId ||
-              !row.patientFirstName ||
-              !row.patientLastName
-            ) {
-              console.warn("Filtering out invalid record:", row);
-              return false;
-            }
-            return true;
-          });
+          // No need to filter - backend now returns only patient-specific data
+          const patientRecords = resp.data.records;
+
+          console.log(`Found ${patientRecords.length} orders for patient ${patient.id}`);
 
           resolve({
-            data: validRecords.map((row) => ({
-              patientHospitalNumber: row.patientHospitalNumber || "N/A",
+            data: patientRecords.map((row) => ({
+              patientHospitalNumber:
+                row.patientHospitalNumber || patient.hospitalNumber,
               name:
-                (row.patientFirstName + " " + row.patientLastName).trim() ||
-                "Unknown Patient",
+                row.patientFirstName && row.patientLastName
+                  ? `${row.patientFirstName} ${row.patientLastName}`.trim()
+                  : patient.fullname ||
+                    `${patient.firstName || ""} ${
+                      patient.surname || ""
+                    }`.trim(),
               date: row.orderDate,
+              orderId: row.orderId,
               count: row.testOrders || 0,
               samplecount: row.collectedSamples || 0,
               sampleVerified: row.verifiedSamples || 0,
               sampleresults: row.reportedResults || 0,
               actions: (
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <Link
-                    to={{
-                      pathname: "/samples-collection",
-                      state: row,
-                    }}
+                  <MatButton
+                    variant="outlined"
+                    // color="primary"
+                    size="small"
+                    onClick={() =>
+                      handleViewOrder({
+                        ...row,
+                        orderId: row.orderId,
+                        patientId: patient.id,
+                        patientFirstName: patient.firstName,
+                        patientLastName: patient.surname,
+                        patientHospitalNumber: patient.hospitalNumber,
+                        visitId: patient.visitId,
+                      })
+                    }
                     style={{
                       cursor: "pointer",
-                      color: "blue",
-                      fontStyle: "bold",
+                      backgroundColor: "rgb(153, 46, 98)",
+                      color: "#fff",
                     }}
                   >
-                    <MatButton variant="outlined" color="primary" size="small">
-                      <VisibilityIcon color="primary" />
-                      View
-                    </MatButton>
-                  </Link>
-
-                  {/* <Link
-                    to={{
-                      pathname: "/test-order",
-                      state: {
-                        id: row.patientId,
-                        hospitalNumber: row.patientHospitalNumber,
-                        fullname: (
-                          row.patientFirstName +
-                          " " +
-                          row.patientLastName
-                        ).trim(),
-                        firstName: row.patientFirstName,
-                        lastName: row.patientLastName,
-                        visitId: row.visitId,
-                      },
-                    }}
-                    style={{
-                      cursor: "pointer",
-                      color: "green",
-                      fontStyle: "bold",
-                    }}
-                  >
-                    <MatButton
-                      variant="outlined"
-                      color="secondary"
-                      size="small"
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        color: "#fff",
+                        fontWeight: "bolder",
+                        marginRight:"5px"
+                      }}
                     >
-                      📊 Timeline
-                    </MatButton>
-                  </Link> */}
+                      <VisibilityIcon />
+                    </span>
+                    View
+                  </MatButton>
                 </div>
               ),
             })),
             page: query.page,
-            totalCount: resp.data.totalRecords || 0,
+            totalCount: patientRecords.length,
           });
         })
         .catch((error) => {
           clearTimeout(timeoutId);
           setLoading(false);
-          console.error("Error fetching pending orders:", error);
+          console.error("Error fetching patient orders:", error);
 
           const newErrorCount = errorCount + 1;
           setErrorCount(newErrorCount);
@@ -195,7 +203,7 @@ const PatientSearch = (props) => {
           if (error.response?.status === 404) {
             // Handle 404 errors gracefully
             toast.warn(
-              "Some patient records may be missing or have been deleted",
+              "Patient records may be missing or have been deleted",
               {
                 position: toast.POSITION.TOP_RIGHT,
               }
@@ -218,18 +226,67 @@ const PatientSearch = (props) => {
             totalCount: 0,
           });
         });
-    });
+    }), [patient, errorCount]);
 
-  const handleChangePage = (page) => {
-    setCurrentPage(page + 1);
-  };
+  // Auto-refresh when refresh flag changes
+  useEffect(() => {
+    console.log("Test orders refresh flag changed:", refreshFlags.testOrders);
+    if (refreshFlags.testOrders > 0) {
+      console.log("Auto-refreshing test orders due to context change");
+      // The MaterialTable will automatically re-fetch data when the key changes
+    }
+  }, [refreshFlags.testOrders]);
 
-  const localization = {
-    pagination: {
-      labelDisplayedRows: `Page: ${currentPage}`,
-    },
-  };
+  // If an order is selected, show embedded sample collection
+  if (selectedOrder) {
+    return (
+      <div>
+        {/* Embedded Sample Collection with integrated back button */}
+        <Card>
+          <CardBody>
+            {/* Back to Orders Button - Better positioned */}
+            <div style={{ 
+              display: "flex", 
+              justifyContent: "space-between", 
+              alignItems: "center", 
+              marginBottom: "20px",
+              paddingBottom: "15px",
+              borderBottom: "1px solid #e0e0e0"
+            }}>
+              <MatButton
+                variant="contained"
+                color="primary"
+                onClick={handleBackToOrders}
+                startIcon={<ArrowBackIcon />}
+                size="small"
+              >
+                Back to Test Orders
+              </MatButton>
+              <span style={{ fontSize: "14px", color: "#666" }}>
+                Order ID: <strong>{selectedOrder.orderId}</strong>
+              </span>
+            </div>
 
+            {/* Embedded Sample Collection */}
+            <SampleList 
+              patientObj={selectedOrder}
+              id={selectedOrder.orderId}
+              isEmbedded={true}
+              onActionComplete={() => {
+                // Trigger refresh when sample collection is completed
+                refreshTestOrders();
+                toast.success("Sample collection completed!", {
+                  position: toast.POSITION.TOP_RIGHT,
+                });
+              }}
+            />
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
+
+  // Default view: Test Orders Table
   return (
     <div>
       <Card>
@@ -245,13 +302,33 @@ const PatientSearch = (props) => {
           )}
 
           <MaterialTable
+            key={`test-orders-${refreshFlags.testOrders}`} // Force re-render on refresh
             icons={tableIcons}
-            title="Laboratory Test Order Search"
+            title={
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span>Test Orders</span>
+                <MatButton
+                  variant="outlined"
+                  color="primary"
+                  size="small"
+                  onClick={refreshTestOrders}
+                  startIcon={<RefreshIcon />}
+                  style={{ marginLeft: '10px' }}
+                >
+                  Refresh
+                </MatButton>
+              </div>
+            }
             columns={[
               { title: "Hospital ID", field: "patientHospitalNumber" },
               {
                 title: "Patient Name",
                 field: "name",
+              },
+              {
+                title: "Order ID",
+                field: "orderId",
+                filtering: false,
               },
               {
                 title: "Date Order",
@@ -287,33 +364,28 @@ const PatientSearch = (props) => {
             ]}
             isLoading={loading}
             data={handlePulledData}
-            onChangePage={handleChangePage}
             options={{
               headerStyle: {
                 backgroundColor: "#014d88",
                 color: "#fff",
               },
               searchFieldStyle: {
-                width: "300%",
-                marginLeft: "250px",
+                width: "300px",
               },
               filtering: false,
               exportButton: false,
               searchFieldAlignment: "left",
-              pageSizeOptions: [10, 20, 100],
-              pageSize: 10,
+              pageSizeOptions: [5, 10, 20],
+              pageSize: 5,
               debounceInterval: 800,
               loadingType: "linear",
               showEmptyDataSourceMessage: true,
               emptyRowsWhenPaging: false,
-              // Add retry option
-              retry: true,
             }}
             localization={{
-              ...localization,
               body: {
-                emptyDataSourceMessage: "No pending test orders found",
-                loadingMessage: "Loading test orders...",
+                emptyDataSourceMessage: "No test orders found for this patient",
+                loadingMessage: "Loading patient test orders...",
               },
               header: {
                 actions: "Actions",
@@ -326,4 +398,4 @@ const PatientSearch = (props) => {
   );
 };
 
-export default PatientSearch;
+export default PatientTestOrders; 

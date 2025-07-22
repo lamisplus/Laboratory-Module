@@ -48,7 +48,6 @@ public class LabOrderService {
     private final JsonNodeTransformer jsonNodeTransformer;
 
 
-//@Transactional
 public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
     try {
         Log.info("=== Starting Lab Order Save Process ===");
@@ -59,14 +58,12 @@ public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
             throw new RuntimeException("Tests list cannot be null or empty");
         }
 
-        // Find person
         Person person = personRepository.findById((long) labOrderDTO.getPatientId()).orElse(null);
         if (person == null) {
             throw new RuntimeException("Patient not found with ID: " + labOrderDTO.getPatientId());
         }
         Log.info("Found person: " + person.getUuid());
 
-        // Create LabOrder entity manually
         LabOrder labOrder = new LabOrder();
         labOrder.setUuid(UUID.randomUUID().toString());
         labOrder.setPatientId(labOrderDTO.getPatientId());
@@ -76,7 +73,6 @@ public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
         labOrder.setFacilityId(getCurrentUserOrganization());
         labOrder.setArchived(0);
 
-        // Set optional fields if they exist
         if (labOrderDTO.getOrderedDate() != null) {
             labOrder.setOrderedDate(labOrderDTO.getOrderedDate());
         }
@@ -86,7 +82,6 @@ public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
 
         Log.info("Created LabOrder entity with UUID: " + labOrder.getUuid());
 
-        // Create Test entities manually
         List<Test> tests = new ArrayList<>();
         for (TestDTO testDTO : labOrderDTO.getTests()) {
             Test test = new Test();
@@ -102,7 +97,6 @@ public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
             test.setFacilityId(getCurrentUserOrganization());
             test.setArchived(0);
 
-            // Set optional fields if they exist
             if (testDTO.getClinicalNote() != null) {
                 test.setClinicalNote(testDTO.getClinicalNote());
             }
@@ -192,38 +186,71 @@ public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
         return AppendPatientDetails(orders);
     }
 
-    public LabOrderListMetaDataDTO GetOrdersPendingSampleCollection(String searchParam, int pageNo, int pageSize){
-        if(searchParam==null || searchParam.equals("*")) {
-            Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
-            Page<PendingOrder> pendingOrders = pendingOrderRepository.findAllPendingSampleCollection(paging, getCurrentUserOrganization());
-            return getLabOrderListMetaDataDto(searchParam, pendingOrders);
+    public LabOrderListMetaDataDTO GetOrdersPendingSampleCollection(String searchParam, int pageNo, int pageSize) {
+        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
+        Page<PendingOrder> pendingOrders;
+
+        if (searchParam == null || searchParam.equals("*") || searchParam.trim().isEmpty()) {
+            pendingOrders = pendingOrderRepository.findAllPendingSampleCollection(paging, getCurrentUserOrganization());
+        } else {
+            pendingOrders = pendingOrderRepository.findAllPendingSampleCollectionWithSearch(paging,
+                    getCurrentUserOrganization(), searchParam.trim());
         }
-        else{
-            List<PendingOrder> pendingOrders = pendingOrderRepository.findAllPendingSampleCollection(getCurrentUserOrganization());
-            return getLabOrderListMetaDataDtoFromSearch(searchParam, pendingOrders);
-        }
+
+        return getLabOrderListMetaDataDto(searchParam, pendingOrders);
     }
 
     public LabOrderListMetaDataDTO GetOrdersPendingSampleVerification(String searchParam, int pageNo, int pageSize) {
-        if (searchParam == null || searchParam.equals("*")) {
-            Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
-            Page<PendingOrder> pendingOrders = pendingOrderRepository.findAllPendingSampleVerification(paging, getCurrentUserOrganization());
-            return getLabOrderListMetaDataDto(searchParam, pendingOrders);
+        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
+        Page<PendingOrder> pendingOrders;
+
+        if (searchParam == null || searchParam.equals("*") || searchParam.trim().isEmpty()) {
+            pendingOrders = pendingOrderRepository.findAllPendingSampleVerification(paging,
+                    getCurrentUserOrganization());
         } else {
-            List<PendingOrder> pendingOrders = pendingOrderRepository.findAllPendingSampleCollection(getCurrentUserOrganization());
-            return getLabOrderListMetaDataDtoFromSearch(searchParam, pendingOrders);
+            pendingOrders = pendingOrderRepository.findAllPendingSampleVerificationWithSearch(paging,
+                    getCurrentUserOrganization(), searchParam.trim());
         }
+
+        return getLabOrderListMetaDataDto(searchParam, pendingOrders);
     }
 
     public LabOrderListMetaDataDTO GetOrdersPendingResults(String searchParam, int pageNo, int pageSize) {
-        if (searchParam == null || searchParam.equals("*")) {
-            Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
-            Page<PendingOrder> pendingOrders = pendingOrderRepository.findAllPendingResults(paging, getCurrentUserOrganization());
-            return getLabOrderListMetaDataDto(searchParam, pendingOrders);
+        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
+        Page<PendingOrder> pendingOrders;
+
+        if (searchParam == null || searchParam.equals("*") || searchParam.trim().isEmpty()) {
+            pendingOrders = pendingOrderRepository.findAllPendingResults(paging, getCurrentUserOrganization());
         } else {
-            List<PendingOrder> pendingOrders = pendingOrderRepository.findAllPendingResults(getCurrentUserOrganization());
-            return getLabOrderListMetaDataDtoFromSearch(searchParam, pendingOrders);
+            pendingOrders = pendingOrderRepository.findAllPendingResultsWithSearch(paging, getCurrentUserOrganization(),
+                    searchParam.trim());
         }
+
+        return getLabOrderListMetaDataDto(searchParam, pendingOrders);
+    }
+
+    // NEW PATIENT-SPECIFIC METHODS FOR OPTIMIZED PERFORMANCE
+    public LabOrderListMetaDataDTO GetOrdersPendingSampleCollectionByPatient(Integer patientId, int pageNo,
+            int pageSize) {
+        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
+        Page<PendingOrder> pendingOrders = pendingOrderRepository.findAllPendingSampleCollectionByPatient(
+                paging, getCurrentUserOrganization(), patientId);
+        return getLabOrderListMetaDataDto("", pendingOrders);
+    }
+
+    public LabOrderListMetaDataDTO GetOrdersPendingSampleVerificationByPatient(Integer patientId, int pageNo,
+            int pageSize) {
+        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
+        Page<PendingOrder> pendingOrders = pendingOrderRepository.findAllPendingSampleVerificationByPatient(
+                paging, getCurrentUserOrganization(), patientId);
+        return getLabOrderListMetaDataDto("", pendingOrders);
+    }
+
+    public LabOrderListMetaDataDTO GetOrdersPendingResultsByPatient(Integer patientId, int pageNo, int pageSize) {
+        Pageable paging = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
+        Page<PendingOrder> pendingOrders = pendingOrderRepository.findAllPendingResultsByPatient(
+                paging, getCurrentUserOrganization(), patientId);
+        return getLabOrderListMetaDataDto("", pendingOrders);
     }
 
     @Nullable
@@ -281,37 +308,43 @@ public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
 
     @NotNull
     private List<PendingOrderDTO> getPendingOrderDTOS(String searchParam, List<PendingOrderDTO> pendingOrderList) {
-        for (PendingOrderDTO dto: pendingOrderList) {
-            PersonResponseDto personResponseDTO = personService.getPersonById((long) dto.getPatientId());
-            dto.setPatientAddress(jsonNodeTransformer.getNodeValue(personResponseDTO.getAddress(), "address", "city", true));
-            dto.setPatientDob(personResponseDTO.getDateOfBirth());
-            dto.setPatientGender(jsonNodeTransformer.getNodeValue(personResponseDTO.getGender(), null, "display", false));
-            dto.setPatientFirstName(personResponseDTO.getFirstName());
-            dto.setPatientId(dto.getPatientId());
-            dto.setPatientHospitalNumber(jsonNodeTransformer.getNodeValue(personResponseDTO.getIdentifier(), "identifier", "value", true));
-            dto.setPatientLastName(personResponseDTO.getSurname());
-            dto.setPatientPhoneNumber(jsonNodeTransformer.getNodeValue(personResponseDTO.getContactPoint(),"contactPoint", "value", true));
+
+        List<PendingOrderDTO> validOrders = new ArrayList<>();
+
+        for (PendingOrderDTO dto : pendingOrderList) {
+            try {
+
+                PersonResponseDto personResponseDTO = personService.getPersonById((long) dto.getPatientId());
+
+                if (personResponseDTO != null) {
+                    dto.setPatientAddress(
+                            jsonNodeTransformer.getNodeValue(personResponseDTO.getAddress(), "address", "city", true));
+                    dto.setPatientDob(personResponseDTO.getDateOfBirth());
+                    dto.setPatientGender(
+                            jsonNodeTransformer.getNodeValue(personResponseDTO.getGender(), null, "display", false));
+                    dto.setPatientFirstName(personResponseDTO.getFirstName());
+                    dto.setPatientId(dto.getPatientId());
+                    dto.setPatientHospitalNumber(jsonNodeTransformer.getNodeValue(personResponseDTO.getIdentifier(),
+                            "identifier", "value", true));
+                    dto.setPatientLastName(personResponseDTO.getSurname());
+                    dto.setPatientPhoneNumber(jsonNodeTransformer.getNodeValue(personResponseDTO.getContactPoint(),
+                            "contactPoint", "value", true));
+
+                    validOrders.add(dto);
+                } else {
+                    Log.warn("Patient not found for ID: " + dto.getPatientId() + " - excluding from results");
+                }
+            } catch (Exception e) {
+                // Log the error but don't break the entire API response
+                Log.warn("Error fetching patient details for ID: " + dto.getPatientId() + " - " + e.getMessage());
+                // Continue processing other records
+            }
         }
 
-        if(searchParam==null || searchParam.equals("*")) {
-            return pendingOrderList;
-        }
-        else{
-//            List<PendingOrderDTO> filteredList = new ArrayList<>();
-//            for(PendingOrderDTO dto: pendingOrderList){
-//                if(dto.getPatientFirstName().contains(searchParam) ||
-//                        dto.getPatientHospitalNumber().contains(searchParam) ||
-//                dto.getPatientLastName().contains(searchParam)){
-//                    filteredList.add(dto);
-//                }
-//            }
 
-
-            return pendingOrderList.stream().filter(x -> x.getPatientFirstName().contains(searchParam)
-                            || x.getPatientLastName().contains(searchParam)
-                            || x.getPatientHospitalNumber().contains(searchParam))
-                    .sorted(Comparator.comparing(PendingOrderDTO::getOrderId)).collect(Collectors.toList());
-        }
+        return validOrders.stream()
+                .sorted(Comparator.comparing(PendingOrderDTO::getOrderId))
+                .collect(Collectors.toList());
     }
 
     public LabOrderResponseDTO AppendAdditionalTestDetails(LabOrderResponseDTO labOrderDTO){
@@ -343,20 +376,36 @@ public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
         List<PatientLabOrderDTO> patientLabOrderDTOS = new ArrayList<>();
 
         for (LabOrder order: orders) {
-            PersonResponseDto personResponseDTO = personService.getPersonById((long) order.getPatientId());
-            PatientLabOrderDTO dto = new PatientLabOrderDTO();
-            dto.setPatientAddress(jsonNodeTransformer.getNodeValue(personResponseDTO.getAddress(), "address", "city", true));
-            dto.setPatientDob(personResponseDTO.getDateOfBirth());
-            dto.setPatientGender(jsonNodeTransformer.getNodeValue(personResponseDTO.getGender(), null, "display", false));
-            dto.setPatientSex(personResponseDTO.getSex());
-            dto.setPatientFirstName(personResponseDTO.getFirstName());
-            dto.setPatientId(order.getPatientId());
-            dto.setPatientHospitalNumber(jsonNodeTransformer.getNodeValue(personResponseDTO.getIdentifier(), "identifier", "value", true));
-            dto.setPatientLastName(personResponseDTO.getSurname());
-            dto.setPatientPhoneNumber(jsonNodeTransformer.getNodeValue(personResponseDTO.getContactPoint(),"contactPoint", "value", true));
-            dto.setLabOrder(AppendAdditionalTestDetails(labMapper.toLabOrderResponseDto(order)));
+            try {
+                PersonResponseDto personResponseDTO = personService.getPersonById((long) order.getPatientId());
 
-            patientLabOrderDTOS.add(dto);
+                if (personResponseDTO != null) {
+                    PatientLabOrderDTO dto = new PatientLabOrderDTO();
+                    dto.setPatientAddress(
+                            jsonNodeTransformer.getNodeValue(personResponseDTO.getAddress(), "address", "city", true));
+                    dto.setPatientDob(personResponseDTO.getDateOfBirth());
+                    dto.setPatientGender(
+                            jsonNodeTransformer.getNodeValue(personResponseDTO.getGender(), null, "display", false));
+                    dto.setPatientSex(personResponseDTO.getSex());
+                    dto.setPatientFirstName(personResponseDTO.getFirstName());
+                    dto.setPatientId(order.getPatientId());
+                    dto.setPatientHospitalNumber(jsonNodeTransformer.getNodeValue(personResponseDTO.getIdentifier(),
+                            "identifier", "value", true));
+                    dto.setPatientLastName(personResponseDTO.getSurname());
+                    dto.setPatientPhoneNumber(jsonNodeTransformer.getNodeValue(personResponseDTO.getContactPoint(),
+                            "contactPoint", "value", true));
+                    dto.setLabOrder(AppendAdditionalTestDetails(labMapper.toLabOrderResponseDto(order)));
+
+                    patientLabOrderDTOS.add(dto);
+                } else {
+                    Log.warn("Patient not found for order ID: " + order.getId() + ", patient ID: "
+                            + order.getPatientId() + " - excluding from results");
+                }
+            } catch (Exception e) {
+                Log.warn("Error fetching patient details for order ID: " + order.getId() + ", patient ID: "
+                        + order.getPatientId() + " - " + e.getMessage());
+
+            }
         }
         return patientLabOrderDTOS;
     }
@@ -422,6 +471,7 @@ public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
         }
     }
 
+
     public List<HistoricalResultResponseDTO> GetHistoricalResultsByPatientId(Integer patientId){
         List<LabOrderResponseDTO> orders =  labMapper.toLabOrderResponseDtoList(labOrderRepository.findAllByPatientIdAndFacilityIdAndArchived(patientId, getCurrentUserOrganization(), 0));
         List<HistoricalResultResponseDTO> historicalResults = new ArrayList<>();
@@ -439,7 +489,6 @@ public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
                 result.setLabTestName(test.getLabTestName());
                 result.setGroupName(test.getLabTestGroupName());
 
-
                 if((long) test.getSamples().size() > 0) {
                     result.setDateSampleCollected(test.getSamples().get(0).getDateSampleCollected());
                     result.setDateSampleVerified(test.getSamples().get(0).getDateSampleVerified());
@@ -450,14 +499,37 @@ public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
                     result.setDateResultReported(test.getResults().get(0).getDateResultReported());
                 }
 
-                PersonResponseDto personResponseDTO = personService.getPersonById((long) updated_order.getPatientId());
-                result.setPatientAddress(jsonNodeTransformer.getNodeValue(personResponseDTO.getAddress(), "address", "city", true));
-                result.setPatientDob(personResponseDTO.getDateOfBirth());
-                result.setPatientGender(jsonNodeTransformer.getNodeValue(personResponseDTO.getGender(), null, "display", false));
-                result.setPatientFirstName(personResponseDTO.getFirstName());
-                result.setPatientHospitalNumber(jsonNodeTransformer.getNodeValue(personResponseDTO.getIdentifier(), "identifier", "value", true));
-                result.setPatientLastName(personResponseDTO.getSurname());
-                result.setPatientPhoneNumber(jsonNodeTransformer.getNodeValue(personResponseDTO.getContactPoint(),"contactPoint", "value", true));
+                try {
+                    PersonResponseDto personResponseDTO = personService
+                            .getPersonById((long) updated_order.getPatientId());
+                    if (personResponseDTO != null) {
+                        result.setPatientAddress(jsonNodeTransformer.getNodeValue(personResponseDTO.getAddress(),
+                                "address", "city", true));
+                        result.setPatientDob(personResponseDTO.getDateOfBirth());
+                        result.setPatientGender(jsonNodeTransformer.getNodeValue(personResponseDTO.getGender(), null,
+                                "display", false));
+                        result.setPatientFirstName(personResponseDTO.getFirstName());
+                        result.setPatientHospitalNumber(jsonNodeTransformer
+                                .getNodeValue(personResponseDTO.getIdentifier(), "identifier", "value", true));
+                        result.setPatientLastName(personResponseDTO.getSurname());
+                        result.setPatientPhoneNumber(jsonNodeTransformer
+                                .getNodeValue(personResponseDTO.getContactPoint(), "contactPoint", "value", true));
+                    } else {
+
+                        Log.warn(
+                                "Patient not found for historical result, patient ID: " + updated_order.getPatientId());
+                        result.setPatientFirstName("Unknown");
+                        result.setPatientLastName("Patient");
+                        result.setPatientHospitalNumber("N/A");
+                    }
+                } catch (Exception e) {
+
+                    Log.warn("Error fetching patient details for historical result, patient ID: "
+                            + updated_order.getPatientId() + " - " + e.getMessage());
+                    result.setPatientFirstName("Unknown");
+                    result.setPatientLastName("Patient");
+                    result.setPatientHospitalNumber("N/A");
+                }
 
                 historicalResults.add(result);
             }

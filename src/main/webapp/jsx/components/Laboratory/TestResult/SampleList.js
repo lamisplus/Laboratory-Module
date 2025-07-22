@@ -1,476 +1,605 @@
-import React, {useEffect, useCallback, useState} from 'react';
-import {Card, CardBody,CardHeader,Col,Row,Alert,Table, Form,FormGroup,Label,Input} from 'reactstrap'
-
-import { TiArrowBack, TiDocumentText } from 'react-icons/ti'
-import MatButton from '@material-ui/core/Button'
-import { makeStyles } from '@material-ui/core/styles'
-import { Link } from 'react-router-dom'
-import {FaPlusSquare} from 'react-icons/fa';
-import 'react-widgets/styles.css'
-import { ToastContainer } from "react-toastify";
-import { checkStatus } from '../../../../utils'
-import MaterialTable from 'material-table';
-import { Spinner } from 'reactstrap';
-import { Badge } from 'reactstrap';
-import {Menu,MenuList,MenuButton,MenuItem,} from "@reach/menu-button";
+import React, { useEffect, useCallback, useState } from "react";
+import {
+  Card,
+  CardBody,
+  CardHeader,
+  Col,
+  Row,
+  Table,
+  Form,
+  FormGroup,
+  Label,
+  Input,
+  Spinner,
+  Badge,
+} from "reactstrap";
+import { TiDocumentText } from "react-icons/ti";
+import MatButton from "@material-ui/core/Button";
+import { makeStyles } from "@material-ui/core/styles";
+import { Link } from "react-router-dom";
+import { FaPlusSquare, FaRegEye } from "react-icons/fa";
+import MaterialTable from "material-table";
+import { Menu, MenuList, MenuButton, MenuItem } from "@reach/menu-button";
 import "@reach/menu-button/styles.css";
-import {FaRegEye} from 'react-icons/fa';
-import {GoChecklist} from 'react-icons/go';
 import Breadcrumbs from "@material-ui/core/Breadcrumbs";
 import Typography from "@material-ui/core/Typography";
-import ModalViewResult from './../TestResult/ViewResult';
-// import ModalSampleTransfer from './../TransferSample/TransferSampleModal';
-import ModalEnterResult from './EnterResult'
+import RefreshIcon from "@material-ui/icons/Refresh";
+import EnterResult from "./EnterResult";
+import ViewResult from "./../TestResult/ViewResult";
 import axios from "axios";
-import {token, url} from '../../../../api'
-import { toast} from "react-toastify";
+import { token, url } from "../../../../api";
+import { toast } from "react-toastify";
 
-const useStyles = makeStyles(theme => ({
-    card: {
-        margin: theme.spacing(20),
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center'
-    },
-    form: {
-        width: '100%', // Fix IE 11 issue.
-        marginTop: theme.spacing(3)
-    },
-    submit: {
-        margin: theme.spacing(3, 0, 2)
-    },
-    cardBottom: {
-        marginBottom: 20
-    },
-    Select: {
-        height: 45,
-        width: 350
-    },
-    button: {
-        margin: theme.spacing(1)
-    },
+const useStyles = makeStyles((theme) => ({
+  input: {
+    border: "1px solid #014d88",
+    borderRadius: "0px",
+    fontSize: "16px",
+    color: "#000",
+  },
+  label: {
+    fontSize: "16px",
+    color: "rgb(153, 46, 98)",
+    fontWeight: "600",
+  },
+}));
 
-    root: {
-        '& > *': {
-            margin: theme.spacing(1)
+const ResultReportingList = (props) => {
+  const classes = useStyles();
+  const Id = props.id;
+  const patientId = props.patientObj?.patientId;
+  const isEmbedded = props.isEmbedded || false; // New prop to hide breadcrumb when embedded
+  const onActionComplete = props.onActionComplete; // Callback for when actions are completed
+
+  const [loading, setLoading] = useState(false);
+  const [fetchTestOrders, setFetchTestOrders] = useState({
+    labOrder: { tests: [] },
+  });
+  const [originalData, setOriginalData] = useState({ labOrder: { tests: [] } });
+  const [showHistoricalView, setShowHistoricalView] = useState(false);
+  const [historicalResults, setHistoricalResults] = useState([]);
+
+  // Modal states
+  const [resultModal, setResultModal] = useState(false);
+  const [viewModal, setViewModal] = useState(false);
+  const [selectedSample, setSelectedSample] = useState({});
+
+  const toggleResultModal = () => setResultModal(!resultModal);
+  const toggleViewModal = () => setViewModal(!viewModal);
+
+  // Load historical results
+  const loadHistoricalResults = useCallback(async () => {
+    if (!patientId) return;
+
+    try {
+      const response = await axios.get(
+        `${url}laboratory/results/patients/${patientId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
         }
-    },
-    input: {
-        border:'1px solid #014d88',
-        borderRadius:'0px',
-        fontSize:'16px',
-        color:'#000'
-    },
-    error: {
-        color: "#f85032",
-        fontSize: "11px",
-    },
-    success: {
-        color: "#4BB543 ",
-        fontSize: "11px",
-    },
-    inputGroupText:{
-        backgroundColor:'#014d88',
-        fontWeight:"bolder",
-        color:'#fff',
-        borderRadius:'0px'
-    },
-    label:{
-        fontSize:'16px',
-        color:'rgb(153, 46, 98)',
-        fontWeight:'600'
+      );
+      console.log("Historical results loaded:", response.data);
+      setHistoricalResults(response.data);
+    } catch (error) {
+      console.error("Error fetching historical results:", error);
+      toast.error("An error occurred while fetching previous results", {
+        position: toast.POSITION.TOP_RIGHT,
+      });
     }
-}))
+  }, [patientId]);
 
-  const SampleList = (props) => {
+  // Load current test orders
+  const loadCurrentData = useCallback(async () => {
+    if (!Id) return;
 
-    const testOrders = [];
-    const sampleCollections = props.patientObj ? props.patientObj : {};
-    console.log(sampleCollections)
-    const patientId = sampleCollections.patientId ? sampleCollections.patientId : ""
-    const Id = props.id;
-    const encounterDate = null ;
-    const hospitalNumber =  null;
-
-    const [loading, setLoading] = useState('')
-    const [fetchTestOrders, setFetchTestOrders] = useState(sampleCollections)
-
-    const [flipTable, setFlipTable] = useState(false)
-    const [previousRecords, setPreviousRecords] = useState([]);
-
-    const classes = useStyles()
-
-    const previousData = useCallback(async () => {
-        try {
-            const response = await axios.get(`${url}laboratory/results/patients/${props.patientObj.patientId}`, { headers: {"Authorization" : `Bearer ${token}`} });
-            //console.log("prev results", response);
-            setPreviousRecords(response.data);
-        } catch (e) {
-            toast.error("An error occurred while fetching previous results", {
-                position: toast.POSITION.TOP_RIGHT
-            });
-        }
-    }, []);
-   
-    useEffect(() => {
-        previousData()
-    }, [previousData]);
-
-    //Get list of test type
-    const labTestType = [];
-    if(testOrders !== null || testOrders ===""){
-            testOrders.forEach(function(value, index, array) {
-                if(value['data']!==null)
-                    labTestType.push(value['data'].lab_test_group);
-            });
-        }
-
-    const uniqueValues = [...new Set(labTestType)];
-    const [modal, setModal] = useState(false) //Modal to collect sample
-    const toggleModal = () => setModal(!modal)
-    const [modal2, setModal2] = useState(false)//modal to transfer sample
-    const toggleModal2 = () => setModal2(!modal2)
-    const [modal4, setModal4] = useState(false)//modal to transfer sample Confirmation
-    const toggleModal4 = () => setModal4(!modal4)
-    const [modal3, setModal3] = useState(false)//modal to View Result
-    const toggleModal3 = () => setModal3(!modal3)
-    const [collectModal, setcollectModal] = useState([])//to collect array of datas into the modal and pass it as props
-    const [labNum, setlabNum] = useState({lab_number:""})
-
-    let  labNumber = "" //check if that key exist in the array
-
-    let lab = localStorage.getItem('labnumber');
-
-    if (lab !== null) {
-        labNumber = lab;
+    try {
+      setLoading(true);
+      const response = await axios.get(`${url}laboratory/orders/${Id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log("Current test orders loaded:", response.data);
+      setOriginalData(response.data);
+      setFetchTestOrders(response.data);
+    } catch (error) {
+      console.error("Error loading test orders:", error);
+      toast.error("An error occurred while fetching lab data", {
+        position: toast.POSITION.TOP_RIGHT,
+      });
+    } finally {
+      setLoading(false);
     }
+  }, [Id]);
 
-    const handleLabNumber = e => {
-        e.preventDefault();   
-            setlabNum({ ...labNum, [e.target.name]: e.target.value })
-            labNumber = e.target.value
+  useEffect(() => {
+    loadCurrentData();
+    if (patientId) {
+      loadHistoricalResults();
     }
+  }, [loadCurrentData, loadHistoricalResults]);
 
-    const handleVerifySample = (row) => {  
-        setcollectModal({...collectModal, ...row});
-        setModal(!modal) 
+  // Get unique test groups for filtering
+  const getUniqueTestGroups = () => {
+    if (!originalData?.labOrder?.tests) return [];
+
+    const testGroups = [];
+    originalData.labOrder.tests.forEach((test) => {
+      if (test?.labTestGroupName) {
+        testGroups.push(test.labTestGroupName);
       }
+    });
 
-    const handleRecollectSample = (row) => {
-        setcollectModal({...collectModal, ...row});
-        setModal2(!modal2) 
-    }
-    const addResult = (row) => {  
-        setcollectModal({...collectModal, ...row});
-        setModal(!modal)
+    return [...new Set(testGroups)];
+  };
+
+  const uniqueTestGroups = getUniqueTestGroups();
+
+  // Handle adding result
+  const handleAddResult = (sample, testData) => {
+    console.log("Adding result for sample:", sample);
+    console.log("Patient object for visitId:", props.patientObj);
+
+    if (!sample.id && !sample.sampleId) {
+      toast.error("Cannot add result: Sample ID is missing", {
+        position: toast.POSITION.TOP_RIGHT,
+      });
+      return;
     }
 
-    const viewresult = (row, labTestName) => {
-        setcollectModal({...collectModal, ...row, labTestName: labTestName});
-        setModal3(!modal3)
+    const visitId = props.patientObj?.visitId;
+    console.log("Retrieved visitId for checkout:", visitId);
+
+    setSelectedSample({
+      ...sample,
+      testData: testData,
+      patientId: patientId,
+      visitId: visitId, // Get visitId directly from patient object
+    });
+    setResultModal(true);
+  };
+
+  // Handle viewing result
+  const handleViewResult = (sample, testData) => {
+    console.log("Viewing result for sample:", sample);
+    setSelectedSample({
+      ...sample,
+      testData: testData,
+      labTestName: testData.labTestName,
+    });
+    setViewModal(true);
+  };
+
+  // Filter tests by group
+  const handleGroupFilter = (e) => {
+    const selectedGroup = e.target.value;
+
+    if (selectedGroup === "All") {
+      setFetchTestOrders(originalData);
+    } else {
+      const filteredTests = {
+        ...originalData,
+        labOrder: {
+          ...originalData.labOrder,
+          tests: originalData.labOrder.tests.filter(
+            (test) => test.labTestGroupName === selectedGroup
+          ),
+        },
+      };
+      setFetchTestOrders(filteredTests);
+    }
+  };
+
+  // Get sample status badge
+  const getSampleStatus = (status) => {
+    switch (status) {
+      case 1:
+        return <Badge color="info">Sample Collected</Badge>;
+      case 2:
+        return <Badge color="warning">Sample Transferred</Badge>;
+      case 3:
+        return <Badge color="success">Sample Verified</Badge>;
+      case 4:
+        return <Badge color="danger">Sample Rejected</Badge>;
+      case 5:
+        return <Badge color="primary">Result Available</Badge>;
+      default:
+        return <Badge color="secondary">Unknown Status</Badge>;
+    }
+  };
+
+  // Get available actions for verified samples
+  const getSampleActions = (test, sample) => {
+    console.log(
+      "Checking actions for test status:",
+      test.labTestOrderStatus,
+      "sample:",
+      sample
+    );
+
+    // Only show actions for samples that have been verified
+    if (sample.dateSampleVerified) {
+      // Check multiple ways if results exist
+      const hasResults =
+        (sample.results && sample.results.length > 0) ||
+        test.labTestOrderStatus === 5 ||
+        sample.resultReported ||
+        sample.dateResultReported;
+
+      console.log("Sample has results:", hasResults, {
+        resultsArray: sample.results?.length || 0,
+        testStatus: test.labTestOrderStatus,
+        resultReported: sample.resultReported,
+        dateResultReported: sample.dateResultReported,
+        dateSampleVerified: sample.dateSampleVerified,
+      });
+
+      return (
+        <Menu>
+          <MenuButton
+            style={{
+              backgroundColor: "rgb(153, 46, 98)",
+              color: "#fff",
+              border: "0px",
+              borderRadius: "4px",
+              padding: "5px",
+            }}
+          >
+            Action <span aria-hidden>▾</span>
+          </MenuButton>
+          <MenuList>
+            <MenuItem onSelect={() => handleViewResult(sample, test)}>
+              <FaRegEye size="15" style={{ color: "#3F51B5" }} /> View Result
+            </MenuItem>
+            {!hasResults && (
+              <MenuItem onSelect={() => handleAddResult(sample, test)}>
+                <FaPlusSquare size="15" style={{ color: "#3F51B5" }} /> Add
+                Result
+              </MenuItem>
+            )}
+          </MenuList>
+        </Menu>
+      );
     }
 
-    const getGroup = e => {
-        const getValue =e.target.value;
-        if(getValue!=='All' || getValue ===null)
-        { 
-            //const testOrders = fetchTestOrders.length >0 ? fetchTestOrders:{}
-           const getNewTestOrder = testOrders.find(x => x.data!==null && x.data.lab_test_group === getValue)
-           setFetchTestOrders([getNewTestOrder])
-           // testOrders =[...getNewTestOrder] 
-        }else{
-            setFetchTestOrders(testOrders)
+    return null;
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    try {
+      return new Date(dateString).toLocaleString();
+    } catch {
+      return dateString;
+    }
+  };
+
+  // Handle data reload after adding result
+  const handleDataReload = () => {
+    console.log("Reloading result reporting data...");
+    loadCurrentData()
+      .then(() => {
+        console.log("Result reporting data reloaded successfully");
+        // toast.success("Data refreshed successfully", {
+        //   position: toast.POSITION.TOP_RIGHT,
+        // });
+
+        // Call the callback if provided (for embedded usage)
+        if (onActionComplete && typeof onActionComplete === "function") {
+          onActionComplete();
         }
-    };
+      })
+      .catch((error) => {
+        console.error("Error reloading data:", error);
+        toast.error("Error refreshing data", {
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      });
+  };
 
-    const sampleStatus = e =>{
-        if(e===1){
-            return <p><Badge  color="light">Sample Collected</Badge></p>
-        }else if(e===2){
-            return <p><Badge  color="light">Sample Transfered</Badge></p>
-        }else if(e===3){
-            return <p><Badge  color="success">Sample Verified</Badge></p>
-        }else if(e===4){
-            return <p><Badge  color="light">Sample Rejected</Badge></p>
-        }else if(e===5){
-            return <p><Badge  color="light">Result Available</Badge></p>
-        }else{
-            return <p><Badge  color="light">Pending Collection</Badge></p>
-        }
+  // Toggle between current and historical view
+  const handleViewToggle = () => {
+    setShowHistoricalView(!showHistoricalView);
+  };
+
+  // Generate table rows for current results
+  const generateCurrentTableRows = () => {
+    if (loading) {
+      return (
+        <tr>
+          <td colSpan="7" className="text-center">
+            <Spinner color="primary" /> Loading Please Wait
+          </td>
+        </tr>
+      );
     }
 
-    function sampleTypeList (test){
-        
-        const  maxVal = []
-        if (test != null && test.length > 0) {
-          for(var i=0; i<test.length; i++){
-             
-                  if ( test[i].display!==null && test[i].display)
-                        console.log(test[i])
-                            maxVal.push(test[i].display)
-              
+    if (
+      !fetchTestOrders?.labOrder?.tests ||
+      fetchTestOrders.labOrder.tests.length === 0
+    ) {
+      return (
+        <tr>
+          <td colSpan="7" className="text-center">
+            No test orders found
+          </td>
+        </tr>
+      );
+    }
+
+    const rows = [];
+
+    fetchTestOrders.labOrder.tests.forEach((test) => {
+      if (test.samples && test.samples.length > 0) {
+        test.samples.forEach((sample) => {
+          // Show samples that have been verified - each sample is handled independently
+          const isRejected = sample.commentSampleVerified
+            ?.toLowerCase()
+            .includes("reject");
+          const isCollected = sample.dateSampleCollected !== null;
+          const isVerified = sample.dateSampleVerified !== null;
+
+          console.log("Sample check:", {
+            sampleNumber: sample.sampleNumber,
+            testStatus: test.labTestOrderStatus,
+            isRejected,
+            isCollected,
+            isVerified,
+            dateSampleVerified: sample.dateSampleVerified,
+          });
+
+          if (!isRejected && isCollected && isVerified) {
+            // Determine the actual status to display
+            let displayStatus = test.labTestOrderStatus;
+            if (
+              test.labTestOrderStatus === 5 ||
+              sample.dateResultReported ||
+              sample.resultReported
+            ) {
+              displayStatus = 5; // Result Available
+            }
+
+            rows.push(
+              <tr key={`${test.id}-${sample.id || sample.sampleNumber}`}>
+                <td>{test.labTestGroupName}</td>
+                <td>{test.labTestName}</td>
+                <td>{sample.sampleNumber}</td>
+                <td>
+                  <Badge color="primary">
+                    {sample.sampleTypeName || "N/A"}
+                  </Badge>
+                </td>
+                <td>{formatDate(sample.dateSampleVerified)}</td>
+                <td>{getSampleStatus(displayStatus)}</td>
+                <td>{getSampleActions(test, sample)}</td>
+              </tr>
+            );
           }
-        return maxVal.toString();
-        }
+        });
+      }
+    });
+
+    if (rows.length === 0) {
+      return (
+        <tr>
+          <td colSpan="7" className="text-center">
+            No verified samples available for result reporting
+          </td>
+        </tr>
+      );
     }
 
-    const sampleAction = (id, row, sample) =>{
-    console.log("samples",sample.results)
-    if(id===3){
-        return (
-                <Menu>
-                <MenuButton style={{ backgroundColor:"#3F51B5", color:"#fff", border:"2px solid #3F51B5", borderRadius:"4px"}}>
-                    Action <span aria-hidden>▾</span>
-                </MenuButton>
-                    <MenuList style={{hover:"#eee"}}>
-                        <MenuItem onSelect={() => viewresult(row, sample.labTestName)}><FaRegEye size="15" style={{color: '#3F51B5'}}/>{" "}View Result</MenuItem>
-                        { sample.results.length === 0 ?
-                        <MenuItem onSelect={() => addResult(row)}><FaPlusSquare size="15" style={{color: '#3F51B5'}}/>{" "} Add Result</MenuItem>
-                        : " "}
-                    </MenuList>
+    return rows;
+  };
 
-                </Menu>
-            )
-        }
-    }
+  // Prepare historical data for MaterialTable
+  const getHistoricalTableData = () => {
+    return historicalResults.map((row) => ({
+      patientId: row.patientId,
+      patientName: `${row.patientFirstName} ${row.patientLastName}`,
+      orderDate: row.orderDate,
+      sampleType: row.sampleTypeName,
+      dateCollected: row.DateSampleCollected || "----",
+      dateVerified: row.dateSampleVerified || "----",
+      dateReported: row.dateResultReported || "----",
+      resultStatus: row.dateResultReported ? "Available" : "Not Available",
+    }));
+  };
 
-    const handleTableChange = () => {
-        setFlipTable(!flipTable)
-    }
-
-    const loadData = useCallback(async () => {
-        try {
-            const response = await axios.get(`${url}laboratory/orders/${Id}`, { headers: {"Authorization" : `Bearer ${token}`} });
-            setFetchTestOrders(response.data);
-        } catch (e) {
-            toast.error("An error occurred while fetching lab", {
-                position: toast.POSITION.TOP_RIGHT
-            });
-        }
-    }, []);
-
-    const handDataReload = () => {
-        loadData();
-    }
-
-    const text = "rejected";
-
-return (
+  return (
     <div>
-
-        <Breadcrumbs aria-label="breadcrumb">
-            <Link color="inherit" 
-                to={{pathname: "/laboratory",
-                state: 'result'
-                }} 
-            >
-                    Laboratory
-            </Link>
-           
-            <Typography color="textPrimary">Result Reporting  </Typography>
-            
-         </Breadcrumbs>
-        <br/>    
-        <br/>
-        <Row>
-            <Col>
-
-                <Card className="mb-12">
-                    <CardHeader> <span style={{  textTransform: 'capitalize'}}>Test Order Details </span>
-                  </CardHeader>
-                <CardBody>
-                    <Row>
-
-                       <Card body>
-                            <Row >
-                                <Col md="3" className='float-right mr-1'>
-                                     <MatButton
-                                        type='submit'
-                                        variant='contained'
-                                        color={flipTable === true ? "primary": "secondary"}
-                                        className=" float-right mr-1"
-                                        onClick={() => handleTableChange()}
-                                    >
-                                        <TiDocumentText/>{" "} { flipTable === true ? "View Recent Results": "Historical Results"}
-                                    </MatButton>
-                                </Col>
-                            </Row>
-                            <br />
-
-
-                                    {
-                                        flipTable === true ?
-                                        <MaterialTable
-
-                                          title="Historical patient sample results"
-                                          columns={[
-                                              { title: "Patient ID", field: "Id" },
-                                              {
-                                                title: "Patient Name",
-                                                field: "name",
-                                              },
-                                              { title: "Date Order", field: "date", type: "date" , filtering: false},
-                                              {
-                                                  title: "Sample type",
-                                                  field: "samplecount",
-                                                  filtering: false
-                                                },
-                                              {
-                                                  title: "Date sample collected",
-                                                  field: "count",
-                                                  filtering: false
-                                                },
-                                              {
-                                                title: "Date Sample verified",
-                                                field: "samples",
-                                                filtering: false
-                                              },
-                                               {
-                                                  title: "Date sample result reported",
-                                                  field: "sampleverified",
-                                                  filtering: false
-                                                },
-                                                 {
-                                                  title: "Result",
-                                                  field: "results",
-                                                  filtering: false
-                                                },
-
-                                          ]}
-                                          //isLoading={loading}
-                                          data={ previousRecords.map((row) => ({
-
-                                          Id: row.patientId,
-                                          name: row.patientFirstName +  ' ' + row.patientLastName,
-                                          date: row.orderDate,
-                                          samplecount: row.sampleTypeName,
-                                          count: row.DateSampleCollected === null ? "----" : row.DateSampleCollected,
-                                          samples: row.dateSampleVerified === null ? "----": row.dateSampleVerified,
-                                          sampleverified: row.dateResultReported === null ? "----" : row.dateResultReported,
-                                          results:  row.dateResultReported !== null ? "Available" : "Not Available"
-                                          }))}
-
-                                           options={{
-                                              headerStyle: {
-                                                  backgroundColor: "#014d88",
-                                                  color: "#fff"
-                                              },
-                                              searchFieldStyle: {
-                                                  width : '300%',
-                                                  margingLeft: '250px',
-                                              },
-                                              filtering: false,
-                                              exportButton: false,
-                                              searchFieldAlignment: 'left',
-                                              pageSizeOptions:[10,20,100],
-                                              pageSize:10,
-                                              debounceInterval: 400
-                                          }}
-                                        />
-                                        :
-                                        <>
-                                        <Row >
-                                            <Col md="3">
-                                                <FormGroup>
-                                                    <Label for="occupation" className={classes.label}>Lab Test Group </Label>
-
-                                                        <Input
-                                                          type="select"
-                                                          name="testgroup"
-                                                          id="testgroup"
-                                                          onChange={getGroup}
-                                                          className={classes.input}
-                                                        >
-                                                           <option value="All"> All </option>
-                                                            {
-                                                              uniqueValues.map(x =>
-                                                                <option key={x} value={x}>
-                                                                  {x}
-                                                                </option>
-                                                            )}
-
-                                                      </Input>
-                                                </FormGroup>
-                                            </Col>
-                                            {/*<Col md="3" className='float-right mr-1'>
-
-                                                <FormGroup>
-                                                    <Label for="occupation">Lab Number </Label>
-                                                <Input
-                                                    type='text'
-                                                    name='lab_number'
-                                                    id='lab_number'
-                                                    value={labNumber!=="" ? labNumber : labNum.lab_number}
-                                                    onChange={handleLabNumber}
-                                                    disabled={labNumber && labNum.lab_number ? 'true' : ''}
-                                                />
-                                                </FormGroup>
-                                            </Col>*/}
-
-                                        </Row>
-                                         <Form >
-                                            <br/>
-                                            <Table  striped responsive>
-                                                <thead style={{  backgroundColor: "#014d88", color: "#fff" }}>
-                                                    <tr>
-                                                        <th>Test Group</th>
-                                                        <th>Test Type</th>
-                                                        <th>Sample Id</th>
-                                                         <th>Sample Type</th>
-                                                        <th>Date Verified</th>
-                                                        <th >Status</th>
-                                                        <th>Action</th>
-                                                        <th ></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                 {!loading ? fetchTestOrders.labOrder.tests.map((row) => (
-                                                        row.samples.map((sample) => (
-                                                             !sample.commentSampleVerified?.toLowerCase().includes(text) && sample.dateSampleCollected !== null && row.labTestOrderStatus !== 1 ?
-                                                               <tr key={row.id} style={{ borderBottomColor: '#fff' }}>
-                                                                 <th className={classes.td}>{row.labTestGroupName}</th>
-                                                                <td className={classes.td}>{row.labTestName}</td>
-                                                                <td className={classes.td}>{sample.sampleNumber}</td>
-                                                                 <td className={classes.td}><Badge  color="primary">{sample.sampleTypeName}</Badge></td>
-                                                                 <td className={classes.td}>{sample.dateSampleVerified}</td>
-                                                                 <td className={classes.td}>{sampleStatus(3)}</td>
-                                                                 <td className={classes.td}>{sampleAction(3, sample, row)}</td>
-                                                                 <td className={classes.td}></td>
-                                                               </tr>
-                                                               :
-                                                               <tr></tr>
-                                                        ))
-                                                     ))
-                                                     :<p> <Spinner color="primary" /> Loading Please Wait</p>
-                                                   }
-                                                </tbody>
-                                            </Table>
-                                            <br />
-
-                                        </Form>
-                                      </>
-                                    }
-
-                              </Card>
-
-                  </Row>
-                </CardBody>
-              </Card>
-            </Col>
-        </Row>
-        {modal || modal2  || modal3 || modal4 ? 
-      (
+      {/* Only show breadcrumb when not embedded */}
+      {!isEmbedded && (
         <>
-            <ModalEnterResult modalstatus={modal} togglestatus={toggleModal} datasample={collectModal} patientId={patientId}
-            labnumber={labNumber !=="" ? labNumber : labNum['lab_number'] } handDataReload={handDataReload}/>
-            <ModalViewResult modalstatus={modal3} togglestatus={toggleModal3} datasample={collectModal} />
-            {/* <TransferModalConfirmation modalstatus={modal4} togglestatusConfirmation={toggleModal4} datasample={collectModal} actionButton={transferSample} labnumber={labNumber!=="" ? labNumber : labNum}/> */}
-       </>
-      ) 
-      : ""
-      } 
-    </div>
-  )  
-}
+          <Breadcrumbs aria-label="breadcrumb">
+            <Link
+              color="inherit"
+              to={{
+                pathname: "/laboratory",
+                state: "result-reporting",
+              }}
+            >
+              Laboratory
+            </Link>
+            <Typography color="textPrimary">Result Reporting</Typography>
+          </Breadcrumbs>
 
-export default SampleList
+          <br />
+          <br />
+        </>
+      )}
+
+      <Row>
+        <Col>
+          <Card className="mb-12">
+            {/* <CardHeader>
+              <span style={{ textTransform: "capitalize" }}>
+                Test Order Details
+              </span>
+            </CardHeader> */}
+
+            <CardBody>
+              <Card body>
+                <Row className="align-items-center justify-content-between">
+                  <Col md="4">
+                    <div className="d-flex align-items-center">
+                      <Label
+                        className={classes.label}
+                        style={{ marginRight: "10px", marginBottom: "0" }}
+                      >
+                        Lab Test Group:
+                      </Label>
+                      <Input
+                        type="select"
+                        name="testgroup"
+                        id="testgroup"
+                        onChange={handleGroupFilter}
+                        className={classes.input}
+                        style={{ width: "auto", minWidth: "250px" }}
+                      >
+                        <option value="All">All</option>
+                        {uniqueTestGroups.map((group) => (
+                          <option key={group} value={group}>
+                            {group}
+                          </option>
+                        ))}
+                      </Input>
+                    </div>
+                  </Col>
+                  <Col md="auto">
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      <MatButton
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        onClick={loadCurrentData}
+                        startIcon={<RefreshIcon />}
+                      >
+                        Refresh
+                      </MatButton>
+                      <MatButton
+                        style={{
+                          backgroundColor: "rgb(153, 46, 98)",
+                        }}
+                        type="submit"
+                        variant="contained"
+                        color={showHistoricalView ? "primary" : "secondary"}
+                        onClick={handleViewToggle}
+                      >
+                        <TiDocumentText />{" "}
+                        {showHistoricalView
+                          ? "View Recent Results"
+                          : "Historical Results"}
+                      </MatButton>
+                    </div>
+                  </Col>
+                </Row>
+                <br />
+
+                {showHistoricalView ? (
+                  <MaterialTable
+                    title="Historical patient sample results"
+                    columns={[
+                      { title: "Patient ID", field: "patientId" },
+                      { title: "Patient Name", field: "patientName" },
+                      {
+                        title: "Date Order",
+                        field: "orderDate",
+                        type: "date",
+                        filtering: false,
+                      },
+                      {
+                        title: "Sample Type",
+                        field: "sampleType",
+                        filtering: false,
+                      },
+                      {
+                        title: "Date Sample Collected",
+                        field: "dateCollected",
+                        filtering: false,
+                      },
+                      {
+                        title: "Date Sample Verified",
+                        field: "dateVerified",
+                        filtering: false,
+                      },
+                      {
+                        title: "Date Result Reported",
+                        field: "dateReported",
+                        filtering: false,
+                      },
+                      {
+                        title: "Result Status",
+                        field: "resultStatus",
+                        filtering: false,
+                      },
+                    ]}
+                    data={getHistoricalTableData()}
+                    options={{
+                      headerStyle: {
+                        backgroundColor: "#014d88",
+                        color: "#fff",
+                      },
+                      // searchFieldStyle: {
+                      //   width: "300px",
+
+                      // },
+                      filtering: false,
+                      exportButton: false,
+                      searchFieldAlignment: "left",
+                      pageSizeOptions: [10, 20, 100],
+                      pageSize: 10,
+                      debounceInterval: 400,
+                    }}
+                  />
+                ) : (
+                  <>
+                    <Form>
+                      <br />
+                      <Table striped responsive>
+                        <thead
+                          style={{ backgroundColor: "#014d88", color: "#fff" }}
+                        >
+                          <tr>
+                            <th>Test Group</th>
+                            <th>Test Type</th>
+                            <th>Sample ID</th>
+                            <th>Sample Type</th>
+                            <th>Date Verified</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>{generateCurrentTableRows()}</tbody>
+                      </Table>
+                    </Form>
+                  </>
+                )}
+              </Card>
+            </CardBody>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Modals */}
+      {resultModal && (
+        <EnterResult
+          modalstatus={resultModal}
+          togglestatus={toggleResultModal}
+          datasample={selectedSample}
+          patientId={patientId}
+          handDataReload={handleDataReload}
+        />
+      )}
+
+      {viewModal && (
+        <ViewResult
+          modalstatus={viewModal}
+          togglestatus={toggleViewModal}
+          datasample={selectedSample}
+        />
+      )}
+    </div>
+  );
+};
+
+export default ResultReportingList;

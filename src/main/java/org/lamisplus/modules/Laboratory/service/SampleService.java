@@ -32,26 +32,80 @@ public class SampleService {
     private final PCRLabRepository pcrLabRepository;
 
     public SampleDTO Save(String labNumber, SampleDTO sampleDTO) {
-        Sample sample = labMapper.tosSample(sampleDTO);
-        //sample.setSampleCollectedBy(SecurityUtils.getCurrentUserLogin().orElse(""));
-        sample.setUuid(UUID.randomUUID().toString());
+        try {
 
-        Test test = testRepository.findById(sample.getTestId()).orElse(null);
-        assert test != null;
-        sample.setPatientUuid(test.getPatientUuid());
-        sample.setPatientId(test.getPatientId());
-        sample.setFacilityId(getCurrentUserOrganization());
-        sample.setArchived(0);
-        SaveLabNumber(sample.getTestId(), labNumber, SAMPLE_COLLECTED);
-        return labMapper.tosSampleDto(repository.save(sample));
+            if (sampleDTO == null) {
+                throw new IllegalArgumentException("Sample data cannot be null");
+            }
+
+            if (sampleDTO.getTestId() == null) {
+                throw new IllegalArgumentException("Test ID is required");
+            }
+
+            if (sampleDTO.getSampleNumber() == null || sampleDTO.getSampleNumber().trim().isEmpty()) {
+                throw new IllegalArgumentException("Sample number is required");
+            }
+
+            Test test = testRepository.findById(sampleDTO.getTestId()).orElse(null);
+            if (test == null) {
+                throw new IllegalArgumentException("Test not found with ID: " + sampleDTO.getTestId());
+            }
+
+            Sample sample = labMapper.tosSample(sampleDTO);
+            sample.setUuid(UUID.randomUUID().toString());
+            sample.setPatientUuid(test.getPatientUuid());
+            sample.setPatientId(test.getPatientId());
+            sample.setFacilityId(getCurrentUserOrganization());
+            sample.setArchived(0);
+
+            Sample savedSample = repository.save(sample);
+
+            try {
+                SaveLabNumber(sampleDTO.getTestId(), labNumber, SAMPLE_COLLECTED);
+            } catch (Exception e) {
+
+                System.err.println("Warning: Failed to update test status: " + e.getMessage());
+            }
+
+            return labMapper.tosSampleDto(savedSample);
+
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to save sample: " + e.getMessage(), e);
+        }
     }
 
     public List<SampleDTO> SaveSamples(String labNumber, List<SampleDTO> sampleDTOs) {
-        List<SampleDTO> saved_samples = new ArrayList<>();
-        for (SampleDTO dto : sampleDTOs) {
-            saved_samples.add(Save(labNumber, dto));
+
+        if (sampleDTOs == null || sampleDTOs.isEmpty()) {
+            throw new IllegalArgumentException("Sample list cannot be null or empty");
         }
-        return saved_samples;
+
+        if (labNumber == null || labNumber.trim().isEmpty()) {
+            throw new IllegalArgumentException("Lab number is required");
+        }
+
+        List<SampleDTO> savedSamples = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+
+        for (int i = 0; i < sampleDTOs.size(); i++) {
+            SampleDTO dto = sampleDTOs.get(i);
+            try {
+                SampleDTO saved = Save(labNumber, dto);
+                savedSamples.add(saved);
+            } catch (Exception e) {
+                String error = "Sample " + (i + 1) + ": " + e.getMessage();
+                errors.add(error);
+                System.err.println("Error saving sample: " + error);
+            }
+        }
+
+        if (!errors.isEmpty()) {
+            throw new RuntimeException("Failed to save some samples: " + String.join("; ", errors));
+        }
+
+        return savedSamples;
     }
 
     private Long getCurrentUserOrganization() {
@@ -60,10 +114,18 @@ public class SampleService {
     }
 
     public void SaveLabNumber(int testId, String labNumber, int orderStatus) {
-        Test test = testRepository.findById(testId).orElse(null);
-        test.setLabNumber(labNumber);
-        test.setLabTestOrderStatus(orderStatus);
-        testRepository.save(test);
+        try {
+            Test test = testRepository.findById(testId).orElse(null);
+            if (test != null) {
+                test.setLabNumber(labNumber);
+                test.setLabTestOrderStatus(orderStatus);
+                testRepository.save(test);
+            } else {
+                throw new IllegalArgumentException("Test not found with ID: " + testId);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update test status: " + e.getMessage(), e);
+        }
     }
 
     public SampleDTO Update(int orderId, String labNumber, SampleDTO sampleDTO) {
@@ -74,10 +136,11 @@ public class SampleService {
 
     public String Delete(Integer id) {
         Sample labOrder = repository.findById(id).orElse(null);
-        //repository.delete(labOrder);
+        if (labOrder == null) {
+            throw new IllegalArgumentException("Sample not found with ID: " + id);
+        }
         labOrder.setArchived(1);
         repository.save(labOrder);
-
         return id + " deleted successfully";
     }
 
@@ -90,6 +153,59 @@ public class SampleService {
         }
     }
 
+    public SampleDTO Update(int sampleId, SampleDTO sampleDTO) {
+        try {
+
+            if (sampleDTO == null) {
+                throw new IllegalArgumentException("Sample data cannot be null");
+            }
+
+            Sample existingSample = repository.findByIdAndArchived(sampleId, 0).orElse(null);
+            if (existingSample == null) {
+                throw new IllegalArgumentException("Sample not found with ID: " + sampleId);
+            }
+
+            Sample updatedSample = labMapper.tosSample(sampleDTO);
+
+            updatedSample.setId(sampleId);
+            updatedSample.setUuid(existingSample.getUuid());
+            updatedSample.setPatientUuid(existingSample.getPatientUuid());
+            updatedSample.setPatientId(existingSample.getPatientId());
+            updatedSample.setFacilityId(existingSample.getFacilityId());
+            updatedSample.setArchived(0);
+
+            String labNumber;
+            if (existingSample.getTestId() != null) {
+                Test existingTest = testRepository.findById(existingSample.getTestId()).orElse(null);
+                if (existingTest != null && existingTest.getLabNumber() != null
+                        && !existingTest.getLabNumber().trim().isEmpty()) {
+                    labNumber = existingTest.getLabNumber();
+                } else {
+                    labNumber = "LAB-UPDATE-" + sampleId + "-" + System.currentTimeMillis();
+                }
+            } else {
+                labNumber = "LAB-UPDATE-" + sampleId + "-" + System.currentTimeMillis();
+            }
+
+            Sample savedSample = repository.save(updatedSample);
+
+            if (sampleDTO.getTestId() != null) {
+                try {
+                    SaveLabNumber(sampleDTO.getTestId(), labNumber, SAMPLE_COLLECTED);
+                } catch (Exception e) {
+                    System.err.println("Warning: Failed to update test status: " + e.getMessage());
+                }
+            }
+
+            return labMapper.tosSampleDto(savedSample);
+
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update sample: " + e.getMessage(), e);
+        }
+    }
+
     public SampleDTO FindById(int id) {
         Sample sample = repository.findByIdAndArchived(id, 0).orElse(null);
         return labMapper.tosSampleDto(sample);
@@ -99,10 +215,9 @@ public class SampleService {
         return pcrLabRepository.allpcrlabs();
     }
 
-    @SneakyThrows
     public PCRLab getSingleLab(Long id) {
         return pcrLabRepository.findById(id)
-                .orElseThrow(() -> new Exception("LIMSPCRLab NOT FOUND"));
+                .orElseThrow(() -> new RuntimeException("PCR Lab not found with ID: " + id));
     }
 
 

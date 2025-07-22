@@ -67,11 +67,6 @@ public class LaboratoryModule extends AcrossModule
                 .build();
     }
 
-    /*
-     *
-     * @return ApiInfo for documentation
-     */
-
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
                 .title("Lamisplus")
@@ -94,13 +89,6 @@ public class LaboratoryModule extends AcrossModule
         return Arrays.asList(new SecurityReference("JWT", authorizationScopes));
     }
 
-    /*
-     * @Param name
-     * @Param keyName
-     * @Param passAs
-     * @return ApiKey
-     * Sending Authorization:
-     */
     private ApiKey apiKey() {
         return new ApiKey("JWT", "Authorization", "header");
     }

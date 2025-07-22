@@ -61,7 +61,7 @@ const CustomTable = ({
       isLoading={isLoading}
       options={{
         search: true,
-        filtering: true,
+        filtering: false,
         headerStyle: {
           backgroundColor: "#014d88",
           color: "#fff",

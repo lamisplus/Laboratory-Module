@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, memo } from "react";
 import MaterialTable from "material-table";
 import axios from "axios";
 import { url as baseUrl, token, wsUrl } from "./../../../api";
-// import { calculate_age } from "../../../utils";
 import { forwardRef } from "react";
 import "semantic-ui-css/semantic.min.css";
 import { Link } from "react-router-dom";
@@ -73,7 +72,7 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
   },
   form: {
-    width: "100%", // Fix IE 11 issue.
+    width: "100%",
     marginTop: theme.spacing(3),
   },
   submit: {
@@ -136,8 +135,35 @@ const CheckedInPatients = (props) => {
     setShowPPI(!e.target.checked);
   };
 
+  const formatCheckInDate = (checkInDate) => {
+    if (!checkInDate) return "";
+
+    try {
+      const date = new Date(checkInDate);
+
+      const options = {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      };
+
+      return date.toLocaleDateString("en-GB", options);
+    } catch (error) {
+      return checkInDate;
+    }
+  };
+
   const columns = useMemo(
     () => [
+      {
+        title: "Test Order Date",
+        field: "checkInDate",
+        render: (rowData) => formatCheckInDate(rowData.checkInDate),
+      },
+
       {
         title: "Patient Name",
         field: "fullname",
@@ -149,29 +175,6 @@ const CheckedInPatients = (props) => {
       },
       { title: "Sex", field: "sex" },
       { title: "Age", field: "age" },
-      {
-        title: "Biometrics",
-        field: "biometricStatus",
-        render: (rowData) =>
-          rowData.biometricStatus === true ? (
-            <Label color="green" size="mini">
-              Biometric Captured
-            </Label>
-          ) : (
-            <Label color="red" size="mini">
-              No Biometric
-            </Label>
-          ),
-      },
-      {
-        title: "ART Status",
-        field: "currentStatus",
-        render: (rowData) => (
-          <Label color="blue" size="mini">
-            {rowData.currentStatus || "Not Enrolled"}
-          </Label>
-        ),
-      },
       {
         title: "Actions",
         field: "actions",
@@ -276,16 +279,48 @@ const CheckedInPatients = (props) => {
 
               <Link
                 to={{
-                  pathname: "/test-order",
+                  pathname: "/patient-lab-detail",
                   state: rowData,
                 }}
                 style={{ cursor: "pointer", color: "blue", fontStyle: "bold" }}
               >
-                <Tooltip title="Sample Verification">
-                  <IconButton aria-label="Sample Verification">
-                    <VisibilityIcon color="primary" />
-                  </IconButton>
-                </Tooltip>
+                <ButtonGroup
+                  variant="contained"
+                  aria-label="split button"
+                  style={{
+                    backgroundColor: "rgb(153, 46, 98)",
+                    height: "30px",
+                    width: "215px",
+                  }}
+                  size="large"
+                >
+                  <Button
+                    color="primary"
+                    size="small"
+                    aria-label="select merge strategy"
+                    aria-haspopup="menu"
+                    style={{
+                      backgroundColor: "rgb(153, 46, 98)",
+                    }}
+                  >
+                    <VisibilityIcon />
+                  </Button>
+                  <Button
+                    style={{
+                      backgroundColor: "rgb(153, 46, 98)",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        color: "#fff",
+                        fontWeight: "bolder",
+                      }}
+                    >
+                      Dashboard
+                    </span>
+                  </Button>
+                </ButtonGroup>
               </Link>
             </div>
           );
@@ -299,14 +334,12 @@ const CheckedInPatients = (props) => {
     try {
       const { search, page, pageSize } = query;
 
-      // Fetch the data
       const data = await fetchPatients({
         search,
         page,
         pageSize,
       });
 
-      // If there's a search term, filter the results
       let filteredData = [...(data || [])];
 
       if (search) {
@@ -318,8 +351,8 @@ const CheckedInPatients = (props) => {
         );
       }
 
-      // Reverse the data for latest first
       const reversedData = filteredData.reverse();
+      console.log("format", reversedData);
 
       return {
         data: reversedData,
@@ -348,7 +381,7 @@ const CheckedInPatients = (props) => {
         <CardBody>
           <CustomTable
             key={tableRefreshTrigger}
-            title="Lab Checked In Patients"
+            title="Patient Test Orders"
             columns={columns}
             data={getData}
             icons={tableIcons}

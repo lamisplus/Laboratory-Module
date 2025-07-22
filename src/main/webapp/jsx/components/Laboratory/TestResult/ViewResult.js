@@ -1,219 +1,233 @@
-import React, { useState, useCallback, useEffect }   from 'react';
+import React, { useState, useCallback, useEffect } from "react";
 import {
-    Modal, ModalHeader, ModalBody, Row, Col, FormGroup, Label, Card, CardBody, Alert
-} from 'reactstrap';
-import MatButton from '@material-ui/core/Button';
-import { makeStyles } from '@material-ui/core/styles';
-import CancelIcon from '@material-ui/icons/Cancel';
-import { Badge } from 'reactstrap';
-import ReactHtmlParser from 'react-html-parser'
-import Divider from '@material-ui/core/Divider';
+  Modal,
+  ModalHeader,
+  ModalBody,
+  Row,
+  Col,
+  Card,
+  CardBody,
+  Alert,
+  Badge,
+  Spinner,
+} from "reactstrap";
+import MatButton from "@material-ui/core/Button";
+import { makeStyles } from "@material-ui/core/styles";
+import CancelIcon from "@material-ui/icons/Cancel";
+import Divider from "@material-ui/core/Divider";
 import axios from "axios";
-import { toast } from 'react-toastify';
-import {token, url} from '../../../../api'
+import { toast } from "react-toastify";
+import { token, url } from "../../../../api";
 
-const useStyles = makeStyles(theme => ({
-    card: {
-        margin: theme.spacing(20),
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center'
-    },
-    form: {
-        width: '100%', // Fix IE 11 issue.
-        marginTop: theme.spacing(3)
-    },
-    submit: {
-        margin: theme.spacing(3, 0, 2)
-    },
-    cardBottom: {
-        marginBottom: 20
-    },
-    Select: {
-        height: 45,
-        width: 350
-    },
-    button: {
-        margin: theme.spacing(1)
-    },
+const useStyles = makeStyles((theme) => ({
+  button: {
+    margin: theme.spacing(1),
+  },
+  resultSection: {
+    marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(2),
+  },
+  boldText: {
+    fontWeight: "bold",
+  },
+  noResultText: {
+    textAlign: "center",
+    color: "#666",
+    fontStyle: "italic",
+    padding: theme.spacing(2),
+  },
+}));
 
-    root: {
-        '& > *': {
-            margin: theme.spacing(1)
+const ViewResult = (props) => {
+  const classes = useStyles();
+  const { datasample = {}, modalstatus, togglestatus } = props;
+
+  const [resultData, setResultData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Get test results
+  const fetchResults = useCallback(async () => {
+    if (!datasample.testId && !datasample.id) {
+      setError("No test ID available");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const testId = datasample.testId || datasample.id;
+      const response = await axios.get(
+        `${url}laboratory/results/tests/${testId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
         }
-    },
-    input: {
-        display: 'none'
-    } 
-}))
+      );
 
-const ModalViewResult = (props) => {
+      setResultData(response.data);
+    } catch (err) {
+      console.error("Error fetching results:", err);
+      setError("Unable to fetch test results");
 
-    const [collectResult, setCollectResult] = useState([])
+      // Only show toast for unexpected errors
+      if (err.response?.status !== 404) {
+        toast.error("An error occurred while fetching sample results", {
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [datasample.testId, datasample.id]);
 
-    const classes = useStyles()
-    const datasample = props.datasample ? props.datasample : {};
-    //console.log("bnm",datasample)
-    const sample_type = datasample.sampleTypeName;
-    const lab_number = datasample.labNumber;
-    const date_sample_verified = datasample.dateSampleVerified;
-    const time_sample_verified = datasample.timeSampleVerified;
-    const date_result_reported = datasample.id ? datasample.date_result_reported : null ;
-    const test_result = datasample.id ? datasample.comment_sample_reported : null ;
-    const result_detail = datasample.id && datasample.reported_result ?  datasample.reported_result : null
-    const sample_id = datasample.sampleNumber ? datasample.sampleNumber : 0 ;
+  useEffect(() => {
+    if (modalstatus && (datasample.testId || datasample.id)) {
+      fetchResults();
+    }
+  }, [modalstatus, fetchResults]);
 
-    const [sampleResults, setSampleResults] = useState({
-         id: 1,
-         uuid: "5fb73629-64c6-406f-8ce4-57b01b98dc7c",
-         sampleID: "19",
-         pcrLabSampleNumber: "BMSH/BMMC/22/0089",
-         visitDate: "2022-09-09",
-         dateSampleReceivedAtPcrLab: "2022-09-09",
-         resultDate: "2022-09-09",
-         testResult: "67854",
-         assayDate: "2022-09-09",
-         approvalDate: "2022-09-09",
-         dateResultDispatched: "2022-09-09",
-         sampleStatus: "Completed",
-         sampleTestable: "true"
-       })
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch {
+      return dateString;
+    }
+  };
 
-    const getResults = useCallback(async () => {
-        try {
-            const response = await axios.get(`${url}laboratory/results/tests/${datasample.testId}`, { headers: {"Authorization" : `Bearer ${token}`}});
+  const renderResultContent = () => {
+    if (loading) {
+      return (
+        <div className="text-center p-4">
+          <Spinner color="primary" />
+          <p className="mt-2">Loading results...</p>
+        </div>
+      );
+    }
 
-            setCollectResult(response.data);
-        } catch (e) {
-           // toast.error("An error occurred while fetching sample results", {
-             //   position: toast.POSITION.TOP_RIGHT
-            //});
-        }
-    }, []);
+    if (error) {
+      return (
+        <div className={classes.noResultText}>
+          <p>{error}</p>
+        </div>
+      );
+    }
 
-    useEffect(() => {
-        getResults();
-    }, [getResults]);
+    if (!resultData || !resultData.dateAssayed) {
+      return (
+        <div className={classes.noResultText}>
+          <p>No results available for this test</p>
+        </div>
+      );
+    }
 
-  return (      
-      <div>
-              <Modal isOpen={props.modalstatus} toggle={props.togglestatus} className={props.className} size="lg">
-                  <ModalHeader toggle={props.togglestatus}>Lab Test Result Details</ModalHeader>
-                      <ModalBody>
-                          <Card>
-                            <CardBody>
-                                <Row style={{ marginTop: '20px'}}>
-                                    <Col xs="12">
-                                    <Alert color="success" style={{color:"#000" , fontWeight: 'bolder', }}>
-                                     <p style={{marginTop: '.7rem' }}>
-                                        Lab number: &nbsp;&nbsp; <span style={{ fontWeight: 'bolder'}}>{ lab_number}</span>
-                                         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                         Sample ID: &nbsp;&nbsp; <span style={{ fontWeight: 'bolder'}}>{" "}{ sample_id}</span>
-                                         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    return (
+      <Row>
+        <Col xs="4">
+          <span className={classes.boldText}>Date Assayed:</span>{" "}
+          {formatDate(resultData.dateAssayed)}
+        </Col>
 
-                                         Sample type: &nbsp;&nbsp;
-                                         <span style={{ fontWeight: 'bolder'}}>{" "}{ sample_type}</span>
-                                          <br/>
-                                         Date sample verified : &nbsp;&nbsp;
-                                         <span style={{ fontWeight: 'bolder'}}>{" "}{ date_sample_verified }</span>
-                                     </p>
+        <Col xs="4">
+          <span className={classes.boldText}>Date Reported:</span>{" "}
+          {formatDate(resultData.dateResultReported)}
+        </Col>
 
-                                   </Alert>
-                                    </Col>
-                                    <Col xs="12">
-                                        <h4>Sample Result: </h4>
-                                        <hr/>
-                                        {datasample.labTestName === "Viral Load" && collectResult.dateAssayed !== null?
-                                        <>
-                                              <Row >
-                                                  <Col xs="4">
-                                                  <span style={{ fontWeight: 'bold'}}>Date Assayed </span>: {collectResult.dateAssayed}
-                                                  <br/>
-                                                  </Col>
-                                                  <br/>
-                                                  <Col xs="4">
-                                                      <span style={{ fontWeight: 'bold'}}>Date Reported </span>: {collectResult.dateResultReported}
-                                                      <br/>
-                                                  </Col>
+        <Col xs="4">
+          <Badge color="primary">Result Available</Badge>
+        </Col>
 
-                                                  <Col xs="4">
-                                                      {/*<span style={{ fontWeight: 'bold'}}> Result </span>:*/}
-                                                      <Badge  color="info"> {ReactHtmlParser("Result Available")}</Badge>
-                                                  </Col>
+        <Col xs="6" className="mt-3">
+          <span className={classes.boldText}>Results:</span>{" "}
+          {resultData.resultReport || "N/A"}
+        </Col>
 
-                                                   <Col xs="4">
-                                                      <br />
-                                                        <span style={{ fontWeight: 'bold'}}> Results </span>: {collectResult.resultReport}
-                                                    </Col>
-                                                    <Col xs="4">
-                                                    <br />
-                                                         <span style={{ fontWeight: 'bold'}}> Unit Measurement </span>: {}
-                                                    </Col>
+        <Col xs="6" className="mt-3">
+          <span className={classes.boldText}>Unit Measurement:</span>{" "}
+          {resultData.unitMeasurement || "N/A"}
+        </Col>
 
-                                                  <Col xs="12">
-                                                  <br />
-                                                      <span style={{ fontWeight: 'bold'}}> Notes </span>: {ReactHtmlParser(collectResult.resultReported)}
-                                                      <Divider  />
-                                                  </Col>
-                                              </Row>
+        {resultData.resultReported && (
+          <Col xs="12" className="mt-3">
+            <span className={classes.boldText}>Notes:</span>
+            <div
+              dangerouslySetInnerHTML={{
+                __html: resultData.resultReported,
+              }}
+              style={{ marginTop: "8px" }}
+            />
+            <Divider className="mt-3" />
+          </Col>
+        )}
+      </Row>
+    );
+  };
 
-                                            <hr />
-                                            </>
-                                            :  !collectResult ? "No Result Available" :
-                                             collectResult.dateAssayed !== null ?
-                                              <Row >
-                                                  <Col xs="4">
-                                                  <span style={{ fontWeight: 'bold'}}>Date Assayed </span>: {collectResult.dateAssayed }
-                                                  <br/>
-                                                  </Col>
-                                                  <br/>
-                                                  <Col xs="4">
-                                                      <span style={{ fontWeight: 'bold'}}>Date Reported </span>: {collectResult.dateResultReported }
-                                                      <br/>
-                                                  </Col>
+  const getSampleInfo = () => ({
+    labNumber: datasample.labNumber || "N/A",
+    sampleId: datasample.sampleNumber || datasample.sample_ID || "N/A",
+    sampleType: datasample.sampleTypeName || "N/A",
+    dateVerified: datasample.dateSampleVerified
+      ? formatDate(datasample.dateSampleVerified)
+      : "N/A",
+    testName: datasample.labTestName || "Unknown Test",
+  });
 
-                                                  <Col xs="4">
-                                                      {/*<span style={{ fontWeight: 'bold'}}> Result </span>:*/}
-                                                      <Badge  color="info"> {ReactHtmlParser("Result Available")}</Badge>
-                                                  </Col>
+  const sampleInfo = getSampleInfo();
 
-                                                  <Col xs="4">
-                                                    <br />
-                                                      <span style={{ fontWeight: 'bold'}}> Results </span>: {collectResult.resultReport}
-                                                  </Col>
-                                                  <Col xs="4">
-                                                  <br />
-                                                       <span style={{ fontWeight: 'bold'}}> Unit Measurement </span>: {}
-                                                  </Col>
+  return (
+    <Modal isOpen={modalstatus} toggle={togglestatus} size="lg">
+      <ModalHeader toggle={togglestatus}>
+        Lab Test Result Details - {sampleInfo.testName}
+      </ModalHeader>
 
-                                                  <Col xs="12">
-                                                  <br />
-                                                      <span style={{ fontWeight: 'bold'}}> Notes </span>: {ReactHtmlParser(collectResult.resultReported)}
-                                                      <Divider  />
-                                                  </Col>
-                                              </Row>
-                                              : "No Result Available"
-                                        }
-                                    </Col>
-                    
-                                </Row>
-                            <br/>
-                          
-                            <MatButton
-                              variant='contained'
-                              color='default'
-                              onClick={props.togglestatus}
-                              className={classes.button}
-                              startIcon={<CancelIcon />}
-                            >
-                              Cancel
-                            </MatButton>
-                      </CardBody>
-                </Card>
-          </ModalBody>
-      </Modal>
-    </div>
+      <ModalBody>
+        <Card>
+          <CardBody>
+            {/* Sample Information Header */}
+            <Alert color="info" className="mb-4">
+              <Row>
+                <Col md="4">
+                  <strong>Lab Number:</strong> {sampleInfo.labNumber}
+                </Col>
+                <Col md="4">
+                  <strong>Sample ID:</strong> {sampleInfo.sampleId}
+                </Col>
+                <Col md="4">
+                  <strong>Sample Type:</strong> {sampleInfo.sampleType}
+                </Col>
+                <Col md="12" className="mt-2">
+                  <strong>Date Sample Verified:</strong>{" "}
+                  {sampleInfo.dateVerified}
+                </Col>
+              </Row>
+            </Alert>
+
+            {/* Results Section */}
+            <div className={classes.resultSection}>
+              <h5 className="mb-3">Test Results:</h5>
+              <hr />
+              {renderResultContent()}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-4 text-right">
+              <MatButton
+                variant="contained"
+                color="default"
+                onClick={togglestatus}
+                className={classes.button}
+                startIcon={<CancelIcon />}
+              >
+                Close
+              </MatButton>
+            </div>
+          </CardBody>
+        </Card>
+      </ModalBody>
+    </Modal>
   );
-}
+};
 
-export default ModalViewResult;
+export default ViewResult;
