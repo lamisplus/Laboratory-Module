@@ -8,8 +8,7 @@ import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import ExpansionPanelActions from '@material-ui/core/ExpansionPanelActions';
 import Typography from '@material-ui/core/Typography';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-//import Chip from '@material-ui/core/Chip';
+import ExpandMoreIcon from "@material-ui/icons/ExpandMore";
 import Divider from '@material-ui/core/Divider';
 import { Button } from 'semantic-ui-react';
 import { Grid, Step, Label, Segment, Icon } from "semantic-ui-react";
@@ -66,7 +65,7 @@ function PatientCard(props) {
     var today = new Date();
     var dateParts = dob.split("-");
     var dateObject = new Date(+dateParts[2], dateParts[1] - 1, +dateParts[0]);
-    var birthDate = new Date(dateObject); // create a date object directlyfrom`dob1`argument
+    var birthDate = new Date(dateObject);
     var age_now = today.getFullYear() - birthDate.getFullYear();
     var m = today.getMonth() - birthDate.getMonth();
         if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
@@ -93,108 +92,163 @@ function PatientCard(props) {
 
     }
 
-    const VaccinationStatus = (patient)=>{
-        //console.log(patient)
-        if(patient.vaccination_status===null){
-            return (<><Label color="yellow" size="mini">Vaccination Status: Not Vaccinated</Label></> )
-        }else if(patient.vaccination_status==="1"){
-            return (<><Label color="teal" size="mini">Vaccination Status: Partially Vaccinated</Label></> )
-        }else if(patient.vaccination_status==="2"){
-            return (<><Label color="green" size="mini">Vaccination Status: Fully Vaccinated</Label></> )
-        }else {
-            return ""
-        }
-    }
+    const VaccinationStatus = (patient) => {
+      if (patient.vaccination_status === null) {
+        return (
+          <>
+            <Label color="yellow" size="mini">
+              Vaccination Status: Not Vaccinated
+            </Label>
+          </>
+        );
+      } else if (patient.vaccination_status === "1") {
+        return (
+          <>
+            <Label color="teal" size="mini">
+              Vaccination Status: Partially Vaccinated
+            </Label>
+          </>
+        );
+      } else if (patient.vaccination_status === "2") {
+        return (
+          <>
+            <Label color="green" size="mini">
+              Vaccination Status: Fully Vaccinated
+            </Label>
+          </>
+        );
+      } else {
+        return "";
+      }
+    };
 
   
   return (
     <div className={classes.root}>
-       <ExpansionPanel defaultExpanded>
-                <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-                
-                <Row>
-                    
-                    <Col md={12}>
-                    <Row className={"mt-1"}>
-                    <Col md={12} className={classes.root2}>
-                        <b style={{fontSize: "25px", color:'rgb(153, 46, 98)'}}>
-                        {patientObj.patientFirstName + " " + patientObj.patientLastName }
-                         < span style={{color:'green'}}>
+      <ExpansionPanel defaultExpanded>
+        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+          <Row>
+            <Col md={12}>
+              <Row className={"mt-1"}>
+                <Col md={12} className={classes.root2}>
+                  <b style={{ fontSize: "25px", color: "rgb(153, 46, 98)" }}>
+                    {patientObj.patientFirstName +
+                      " " +
+                      patientObj.patientLastName}
+                    {/* < span style={{color:'green'}}>
                              {": "+"Active"}
-                        </span>
-                        </b>
-                    </Col>
-                    <Col md={4} className={classes.root2} style={{marginTop:"10px"}}>
-                    <span  style={{color:'#000'}}>
-                        {" "}
-                        Hospital Number : <b style={{color:'#0B72AA'}}>{patientObj.patientHospitalNumber }</b>
-                    </span>
-                    </Col>
+                        </span> */}
+                  </b>
+                </Col>
+                <Col
+                  md={4}
+                  className={classes.root2}
+                  style={{ marginTop: "10px" }}
+                >
+                  <span style={{ color: "#000" }}>
+                    {" "}
+                    Hospital Number :{" "}
+                    <b style={{ color: "#0B72AA" }}>
+                      {patientObj.patientHospitalNumber}
+                    </b>
+                  </span>
+                </Col>
 
-                    <Col md={4} className={classes.root2} style={{marginTop:"10px"}}>
-                    <span style={{color:'#000'}}>
-                        Date Of Birth : <b style={{color:'#0B72AA'}}>{patientObj.patientDob }</b>
-                    </span>
-                    </Col>
-                    <Col md={4} className={classes.root2} style={{marginTop:"10px"}}>
-                    <span style={{color:'#000'}}>
-                        {" "}
-                        Age : <b style={{color:'#0B72AA'}}>{calculate_age(moment(patientObj.patientDob).format("DD-MM-YYYY"))}</b>
-                    </span>
-                    </Col>
-                    <Col md={4} style={{marginTop:"10px"}}>
-                    <span style={{color:'#000'}}>
-                        {" "}
-                        Sex :{" "}
-                        <b style={{color:'#0B72AA',fontFamily:`'poppins', sans-serif`,fontWeight:'bolder'}}>{patientObj.patientSex }</b>
-                    </span>
-                    </Col>
-                    <Col md={4} className={classes.root2} style={{marginTop:"10px"}}>
-                    <span style={{color:'#000'}}>
-                        {" "}
-                        E-mail : <b style={{color:'#0B72AA'}}>{patientObj.patientPhoneNumber }</b>
-                    </span>
-                    </Col>
-                    <Col md={4} className={classes.root2} style={{marginTop:"10px"}}>
-                    <span style={{color:'#000'}}>
-                        {" "}
-                        Address: <b style={{color:'#0B72AA'}}> </b>
-                    </span>
-                    </Col>
+                <Col
+                  md={4}
+                  className={classes.root2}
+                  style={{ marginTop: "10px" }}
+                >
+                  <span style={{ color: "#000" }}>
+                    Date Of Birth :{" "}
+                    <b style={{ color: "#0B72AA" }}>{patientObj.patientDob}</b>
+                  </span>
+                </Col>
+                <Col
+                  md={4}
+                  className={classes.root2}
+                  style={{ marginTop: "10px" }}
+                >
+                  <span style={{ color: "#000" }}>
+                    {" "}
+                    Age :{" "}
+                    <b style={{ color: "#0B72AA" }}>
+                      {calculate_age(
+                        moment(patientObj.patientDob).format("DD-MM-YYYY")
+                      )}
+                    </b>
+                  </span>
+                </Col>
+                <Col md={4} style={{ marginTop: "10px" }}>
+                  <span style={{ color: "#000" }}>
+                    {" "}
+                    Sex :{" "}
+                    <b
+                      style={{
+                        color: "#0B72AA",
+                        fontFamily: `'poppins', sans-serif`,
+                        fontWeight: "bolder",
+                      }}
+                    >
+                      {patientObj.patientSex}
+                    </b>
+                  </span>
+                </Col>
+                <Col
+                  md={4}
+                  className={classes.root2}
+                  style={{ marginTop: "10px" }}
+                >
+                  <span style={{ color: "#000" }}>
+                    {" "}
+                    Phone:{" "}
+                    <b style={{ color: "#0B72AA" }}>
+                      {patientObj.patientPhoneNumber}
+                    </b>
+                  </span>
+                </Col>
+                <Col
+                  md={4}
+                  className={classes.root2}
+                  style={{ marginTop: "10px" }}
+                >
+                  <span style={{ color: "#000" }}>
+                    {" "}
+                    Address: <b style={{ color: "#0B72AA" }}> </b>
+                  </span>
+                </Col>
 
-                    {/*<Col md={12}>
+                {/*<Col md={12}>
                     {VaccinationStatus(patientObj)}
                     {CurrentStatus(patientObj.current_status)}
                     
                     </Col>*/}
-                    </Row>
-                    </Col>
+              </Row>
+            </Col>
+          </Row>
+        </ExpansionPanelSummary>
 
-                </Row>
-                </ExpansionPanelSummary>
-
-                <ExpansionPanelActions expandIcon={<ExpandMoreIcon />}>
-                  <div className="float-end" style={{floated:'right'}}>
-                    <Link to={"/"} >
-                        <Button
-                            floated='right'
-                            style={{padding:'0px'}}
-                        >
-                            <MatButton
-                                variant="contained"
-                                floated='right'
-                                startIcon={<TiArrowBack  />}
-                                style={{backgroundColor:"rgb(153, 46, 98)", color:'#fff', height:'35px'}}
-                            >
-                                <span style={{ textTransform: "capitalize" }}>Back</span>
-                            </MatButton>
-                        </Button>
-
-                    </Link>
-                    </div>
-                </ExpansionPanelActions>
-            </ExpansionPanel>
-        
+        <ExpansionPanelActions expandIcon={<ExpandMoreIcon />}>
+          <div className="float-end" style={{ floated: "right" }}>
+            <Link to={"/"}>
+              <Button floated="right" style={{ padding: "0px" }}>
+                <MatButton
+                  variant="contained"
+                  floated="right"
+                  startIcon={<TiArrowBack />}
+                  style={{
+                    backgroundColor: "rgb(153, 46, 98)",
+                    color: "#fff",
+                    height: "35px",
+                  }}
+                >
+                  <span style={{ textTransform: "capitalize" }}>Back</span>
+                </MatButton>
+              </Button>
+            </Link>
+          </div>
+        </ExpansionPanelActions>
+      </ExpansionPanel>
     </div>
   );
 }

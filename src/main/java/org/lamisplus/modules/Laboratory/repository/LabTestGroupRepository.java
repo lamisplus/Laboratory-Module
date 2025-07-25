@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface LabTestGroupRepository extends JpaRepository<LabTestGroup, Integer> {
 
-    @Query(value = "SELECT * FROM laboratory_labtestgroup where id  = 5", nativeQuery = true)
+    @Query(value = "SELECT * FROM laboratory_labtestgroup", nativeQuery = true)
     Optional<LabTestGroup> getTbLabTestGroup();
 
 }

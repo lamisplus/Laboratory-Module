@@ -1,366 +1,455 @@
-import React, {useEffect, useCallback, useState} from 'react';
-import {Card, CardBody,CardHeader,Col,Row,Alert,Table, Form,FormGroup,Label,Input} from 'reactstrap'
-
-import { TiArrowBack } from 'react-icons/ti'
-import MatButton from '@material-ui/core/Button'
-import { makeStyles } from '@material-ui/core/styles'
-import { Link } from 'react-router-dom'
-import {FaPlusSquare} from 'react-icons/fa';
-import 'react-widgets/styles.css'
-import { ToastContainer } from "react-toastify";
-import { toast } from 'react-toastify';
-import {token, url } from "../../../../api";
+import React, { useEffect, useCallback, useState } from "react";
+import {
+  Card,
+  CardBody,
+  CardHeader,
+  Col,
+  Row,
+  Table,
+  Form,
+  FormGroup,
+  Label,
+  Input,
+  Spinner,
+  Badge,
+} from "reactstrap";
+import { makeStyles } from "@material-ui/core/styles";
+import { Link } from "react-router-dom";
+import { FaPlusSquare, FaRegEye } from "react-icons/fa";
+import { GoChecklist } from "react-icons/go";
+import { toast } from "react-toastify";
+import { token, url } from "../../../../api";
 import axios from "axios";
-
-import { Spinner } from 'reactstrap';
-import { Badge } from 'reactstrap';
-import {Menu,MenuList,MenuButton,MenuItem,} from "@reach/menu-button";
+import { Menu, MenuList, MenuButton, MenuItem } from "@reach/menu-button";
 import "@reach/menu-button/styles.css";
-import {FaRegEye} from 'react-icons/fa';
-import {GoChecklist} from 'react-icons/go';
 import Breadcrumbs from "@material-ui/core/Breadcrumbs";
 import Typography from "@material-ui/core/Typography";
-import ModalViewResult from './../TestResult/ViewResult';
-// import ModalSampleTransfer from './../TransferSample/TransferSampleModal';
-import SampleVerification from './SampleVerification'
-import { checkStatus } from '../../../../utils'
+import MatButton from "@material-ui/core/Button";
+import RefreshIcon from "@material-ui/icons/Refresh";
+import SampleVerification from "./SampleVerification";
+import ViewResult from "./../TestResult/ViewResult";
 
-const useStyles = makeStyles(theme => ({
-    card: {
-        margin: theme.spacing(20),
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center'
-    },
-    form: {
-        width: '100%', // Fix IE 11 issue.
-        marginTop: theme.spacing(3)
-    },
-    submit: {
-        margin: theme.spacing(3, 0, 2)
-    },
-    cardBottom: {
-        marginBottom: 20
-    },
-    Select: {
-        height: 45,
-        width: 350
-    },
-    button: {
-        margin: theme.spacing(1)
-    },
+const useStyles = makeStyles((theme) => ({
+  input: {
+    border: "1px solid #014d88",
+    borderRadius: "0px",
+    fontSize: "16px",
+    color: "#000",
+  },
+  label: {
+    fontSize: "16px",
+    color: "rgb(153, 46, 98)",
+    fontWeight: "600",
+  },
+}));
 
-    root: {
-        '& > *': {
-            margin: theme.spacing(1)
-        }
-    },
-    input: {
-        border:'1px solid #014d88',
-        borderRadius:'0px',
-        fontSize:'16px',
-        color:'#000'
-    },
-    error: {
-        color: "#f85032",
-        fontSize: "11px",
-    },
-    success: {
-        color: "#4BB543 ",
-        fontSize: "11px",
-    },
-    inputGroupText:{
-        backgroundColor:'#014d88',
-        fontWeight:"bolder",
-        color:'#fff',
-        borderRadius:'0px'
-    },
-    label:{
-        fontSize:'16px',
-        color:'rgb(153, 46, 98)',
-        fontWeight:'600'
-    }
-}))
+const SampleVerificationList = (props) => {
+  const classes = useStyles();
+  const Id = props.id;
+  const isEmbedded = props.isEmbedded || false;
+  const onActionComplete = props.onActionComplete;
 
-    const SampleList = (props) => {
+  const [loading, setLoading] = useState(false);
+  const [fetchTestOrders, setFetchTestOrders] = useState({
+    labOrder: { tests: [] },
+  });
+  const [originalData, setOriginalData] = useState({ labOrder: { tests: [] } });
 
-    const testOrders = [];
-    const sampleCollections = props.patientObj ? props.patientObj : {};
+  const [verificationModal, setVerificationModal] = useState(false);
+  const [resultModal, setResultModal] = useState(false);
+  const [selectedSample, setSelectedSample] = useState({});
 
-    const Id = props.id;
+  const toggleVerificationModal = () =>
+    setVerificationModal(!verificationModal);
+  const toggleResultModal = () => setResultModal(!resultModal);
 
-    const encounterDate = null ;
-    const hospitalNumber =  null;
+  const getUniqueTestGroups = () => {
+    if (!originalData?.labOrder?.tests) return [];
 
-    const [loading, setLoading] = useState('')
-    const [fetchTestOrders, setFetchTestOrders] = useState(sampleCollections)
-    const classes = useStyles()
-
-    const labTestType = [];
-    if(testOrders !== null || testOrders ===""){
-        testOrders.forEach(function(value, index, array) {
-            if(value['data']!==null)
-                labTestType.push(value['data'].lab_test_group);
-        });
-    }
-
-    //Make the list contain unique list of Data
-    const uniqueValues = [...new Set(labTestType)];
-    const [modal, setModal] = useState(false) //Modal to collect sample
-    const toggleModal = () => setModal(!modal)
-    const [modal2, setModal2] = useState(false)//modal to transfer sample
-    const toggleModal2 = () => setModal2(!modal2)
-    const [modal4, setModal4] = useState(false)//modal to transfer sample Confirmation
-    const toggleModal4 = () => setModal4(!modal4)
-    const [modal3, setModal3] = useState(false)//modal to View Result
-    const toggleModal3 = () => setModal3(!modal3)
-    const [collectModal, setcollectModal] = useState([])//to collect array of datas into the modal and pass it as props
-    const [labNum, setlabNum] = useState({lab_number:""})
-
-    const handleVerifySample = (row) => {
-        //console.log('rowsx', row, sid);
-        //row['sampleID'] = sid;
-        setcollectModal({...collectModal, ...row});
-
-        setModal(!modal)
+    const testGroups = [];
+    originalData.labOrder.tests.forEach((test) => {
+      if (test?.labTestGroupName) {
+        testGroups.push(test.labTestGroupName);
       }
+    });
 
-    const handleRecollectSample = (row) => {
-        setcollectModal({...collectModal, ...row});
-        setModal2(!modal2) 
+    return [...new Set(testGroups)];
+  };
+
+  const uniqueTestGroups = getUniqueTestGroups();
+
+  const loadData = useCallback(async () => {
+    if (!Id) return;
+
+    try {
+      setLoading(true);
+      const response = await axios.get(`${url}laboratory/orders/${Id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log("Loaded test orders for verification:", response.data);
+      setOriginalData(response.data);
+      setFetchTestOrders(response.data);
+    } catch (error) {
+      console.error("Error loading test orders:", error);
+      toast.error("An error occurred while fetching lab data", {
+        position: toast.POSITION.TOP_RIGHT,
+      });
+    } finally {
+      setLoading(false);
     }
-    const addResult = (row) => {  
-        setcollectModal({...collectModal, ...row});
-        setModal4(!modal4) 
-    }
+  }, [Id]);
 
-    const viewresult = (row) => {  
-        setcollectModal({...collectModal, ...row});
-        setModal3(!modal3) 
-    }
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
-    const getGroup = e => {
-        const getValue =e.target.value;
-        if(getValue!=='All' || getValue ===null)
-        { 
-            //const testOrders = fetchTestOrders.length >0 ? fetchTestOrders:{}
-            const getNewTestOrder = testOrders.find(x => x.data!==null && x.data.lab_test_group === getValue)
-           setFetchTestOrders([getNewTestOrder])
-           // testOrders =[...getNewTestOrder] 
-        }else{
-            setFetchTestOrders(testOrders)
-        }
-    };
+  const handleVerifySample = (sample) => {
+    console.log("Opening verification modal for sample:", sample);
 
-    const sampleStatus = e =>{
-        if(e===1){
-            return <p><Badge  color="info">Sample Collected</Badge></p>
-        }else if(e===2){
-            return <p><Badge  color="light">Sample Transfered</Badge></p>
-        }else if(e===3){
-            return <p><Badge  color="light">Sample Verified</Badge></p>
-        }else if(e===4){
-            return <p><Badge  color="light">Sample Rejected</Badge></p>
-        }else if(e===5){
-            return <p><Badge  color="light">Result Available</Badge></p>
-        }else{
-            return <p><Badge  color="warning">Pending Collection</Badge></p>
-        }
-    }
-
-    function sampleTypeList (test){
-        
-        const  maxVal = []
-        if (test != null && test.length > 0) {
-          for(var i=0; i<test.length; i++){
-             
-                  if ( test[i].display!==null && test[i].display)
-                        console.log(test[i])
-                            maxVal.push(test[i].display)
-              
-          }
-        return maxVal.toString();
-        }
+    if (!sample.id && !sample.sampleId) {
+      toast.error("Cannot verify sample: Sample ID is missing", {
+        position: toast.POSITION.TOP_RIGHT,
+      });
+      return;
     }
 
-    const sampleAction = (id, row) =>{
-        if(id ===1){
-            return (
-                    <Menu>
-                    <MenuButton style={{ backgroundColor:"#3F51B5", color:"#fff", border:"2px solid #3F51B5", borderRadius:"4px"}}>
-                        Action <span aria-hidden>▾</span>
-                    </MenuButton>
-                        <MenuList style={{hover:"#eee"}}>
-                        <MenuItem onSelect={() => handleVerifySample(row)}><GoChecklist size="15" style={{color: '#3F51B5'}}/>{" "}Verify Sample</MenuItem>
-                        </MenuList>
-                    </Menu>
-                )
-            }
-            if(row.labTestOrderStatus===4){
-                return (
-                        <Menu>
-                        <MenuButton style={{ backgroundColor:"#3F51B5", color:"#fff", border:"2px solid #3F51B5", borderRadius:"4px"}}>
-                            Action <span aria-hidden>▾</span>
-                        </MenuButton>
-                            <MenuList style={{hover:"#eee"}}>
-                            <MenuItem onSelect={() => handleRecollectSample(row)}><FaPlusSquare size="15" style={{color: '#3F51B5'}}/>{" "}Re-collect Sample</MenuItem>
-                            </MenuList>
-                        </Menu>
-                    )
-                }
-                if(row.labTestOrderStatus===5){
-                    return (
-                            <Menu>
-                            <MenuButton style={{ backgroundColor:"#3F51B5", color:"#fff", border:"2px solid #3F51B5", borderRadius:"4px"}}>
-                                Action <span aria-hidden>▾</span>
-                            </MenuButton>
-                                <MenuList style={{hover:"#eee"}}>
-                                    <MenuItem onSelect={() => viewresult(row)}><FaRegEye size="15" style={{color: '#3F51B5'}}/>{" "}View Result</MenuItem>
-                                    <MenuItem onSelect={() => addResult(row)}><FaPlusSquare size="15" style={{color: '#3F51B5'}}/>{" "}Add Result</MenuItem>
-                                </MenuList>
+    setSelectedSample(sample);
+    setVerificationModal(true);
+  };
 
-                            </Menu>
-                        )
-                    }
-            }
+  const viewResult = (sample) => {
+    console.log("Viewing result for sample:", sample);
+    setSelectedSample(sample);
+    setResultModal(true);
+  };
 
-    const loadData = useCallback(async () => {
-        try {
-            const response = await axios.get(`${url}laboratory/orders/${Id}`, { headers: {"Authorization" : `Bearer ${token}`} });
-            setFetchTestOrders(response.data);
-        } catch (e) {
-            toast.error("An error occurred while fetching lab", {
-                position: toast.POSITION.TOP_RIGHT
-            });
-        }
-    }, []);
+  const handleGroupFilter = (e) => {
+    const selectedGroup = e.target.value;
 
-    const handDataReload = () => {
-        loadData();
+    if (selectedGroup === "All") {
+      setFetchTestOrders(originalData);
+    } else {
+      const filteredTests = {
+        ...originalData,
+        labOrder: {
+          ...originalData.labOrder,
+          tests: originalData.labOrder.tests.filter(
+            (test) => test.labTestGroupName === selectedGroup
+          ),
+        },
+      };
+      setFetchTestOrders(filteredTests);
     }
+  };
 
-return (
-    <div>
+  const getSampleStatus = (status) => {
+    switch (status) {
+      case 1:
+        return <Badge color="info">Sample Collected</Badge>;
+      case 2:
+        return <Badge color="warning">Sample Transferred</Badge>;
+      case 3:
+        return <Badge color="success">Sample Verified</Badge>;
+      case 4:
+        return <Badge color="danger">Sample Rejected</Badge>;
+      case 5:
+        return <Badge color="primary">Result Available</Badge>;
+      default:
+        return <Badge color="secondary">Unknown Status</Badge>;
+    }
+  };
 
-        <Breadcrumbs aria-label="breadcrumb">
-            <Link color="inherit" 
-                to={{pathname: "/laboratory",
-                state: 'collect-sample'
-                }} 
+  const getSampleActions = (test, sample) => {
+    const { labTestOrderStatus } = test;
+
+    if (sample.dateSampleCollected && !sample.dateSampleVerified) {
+      return (
+        <Menu>
+          <MenuButton
+            style={{
+              backgroundColor: "#3F51B5",
+              color: "#fff",
+              border: "2px solid #3F51B5",
+              borderRadius: "4px",
+            }}
+          >
+            Action <span aria-hidden>▾</span>
+          </MenuButton>
+          <MenuList>
+            <MenuItem
+              onSelect={() => handleVerifySample({ ...sample, testData: test })}
             >
-                    Laboratory
-            </Link>
-           
-            <Typography color="textPrimary">Sample Verification  </Typography>
-            
-         </Breadcrumbs>
-        <br/>    
-        <br/>
-        <Row>
-            <Col>
-                <div >
-                   
-                </div>
-                <br/>
-                <Card className="mb-12">
-                    <CardHeader> <span style={{  textTransform: 'capitalize'}}>Samples Collected Details </span>
+              <GoChecklist size="15" style={{ color: "#3F51B5" }} /> Verify
+              Sample
+            </MenuItem>
+          </MenuList>
+        </Menu>
+      );
+    }
 
-                  </CardHeader>
-                <CardBody>
-                    { /* <Alert color="primary">
-                        Please make sure you enter Lab number before collecting sample
-                    </Alert>*/}
-                <br />
-                    <Row>
-                       
-                            <Card body>
-                                <Row >
-                                    <Col md="3">
-                                          <FormGroup>
-                                             <Label for="occupation" className={classes.label}>Lab Test Group </Label>
+    if (labTestOrderStatus === 4) {
+      return (
+        <Menu>
+          <MenuButton
+            style={{
+              backgroundColor: "#3F51B5",
+              color: "#fff",
+              border: "2px solid #3F51B5",
+              borderRadius: "4px",
+            }}
+          >
+            Action <span aria-hidden>▾</span>
+          </MenuButton>
+          <MenuList>
+            <MenuItem
+              onSelect={() => console.log("Re-collect sample:", sample)}
+            >
+              <FaPlusSquare size="15" style={{ color: "#3F51B5" }} /> Re-collect
+              Sample
+            </MenuItem>
+          </MenuList>
+        </Menu>
+      );
+    }
 
-                                                <Input
-                                                  type="select"
-                                                  name="testgroup"
-                                                  id="testgroup"
-                                                  onChange={getGroup}
-                                                  className={classes.input}
-                                                >
-                                                   <option value="All"> All </option>
-                                                    {
-                                                      uniqueValues.map(x =>
-                                                        <option key={x} value={x}>
-                                                          {x}
-                                                        </option>
-                                                    )}
+    if (labTestOrderStatus === 5) {
+      return (
+        <Menu>
+          <MenuButton
+            style={{
+              backgroundColor: "#3F51B5",
+              color: "#fff",
+              border: "2px solid #3F51B5",
+              borderRadius: "4px",
+            }}
+          >
+            Action <span aria-hidden>▾</span>
+          </MenuButton>
+          <MenuList>
+            <MenuItem
+              onSelect={() => viewResult({ ...sample, testData: test })}
+            >
+              <FaRegEye size="15" style={{ color: "#3F51B5" }} /> View Result
+            </MenuItem>
+            <MenuItem onSelect={() => console.log("Add result:", sample)}>
+              <FaPlusSquare size="15" style={{ color: "#3F51B5" }} /> Add Result
+            </MenuItem>
+          </MenuList>
+        </Menu>
+      );
+    }
 
-                                              </Input>
-                                        </FormGroup>
-                                    </Col>
+    return null;
+  };
 
-                                </Row>
-                                
-                                    <Form >
-                                    <br/>
-                                        <Table  striped responsive>
-                                            <thead style={{  backgroundColor:'#014d88', color:'#fff' }}>
-                                                <tr>
-                                                    <th>Test Group</th>
-                                                    <th>Test Type</th>
-                                                    <th>Sample Id</th>
-                                                    <th>Sample Type</th>
-                                                    <th>Date Collected</th>
-                                                    <th >Status</th>
-                                                    <th>Action</th>
-                                                    <th ></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {!loading ? fetchTestOrders.labOrder.tests.map((row) => (
-                                                    row.samples.map((sample) => (
-                                                         sample.dateSampleCollected !== null && row.labTestOrderStatus === 1 ?
-                                                           <tr key={row.id} style={{ borderBottomColor: '#fff' }}>
-                                                             <th className={classes.td}>{row.labTestGroupName}</th>
-                                                             <td className={classes.td}>{row.labTestName}</td>
-                                                             <td className={classes.td}>{sample.sampleNumber}</td>
-                                                             <td className={classes.td}><Badge  color="primary">{sample.sampleTypeName}</Badge></td>
-                                                             <td className={classes.td}>{sample.dateSampleCollected}</td>
-                                                             <td className={classes.td}>{sampleStatus(1)}</td>
-                                                             <td className={classes.td}>{sampleAction(1, sample)}</td>
-                                                             <td className={classes.td}></td>
-                                                           </tr>
-                                                           :
-                                                           <tr></tr>
-                                                    ))
-                                                 ))
-                                                 :<p> <Spinner color="primary" /> Loading Please Wait</p>
-                                               }
-                                            </tbody>
-                                        </Table>
-                                        <br />
-                                  
-                                    </Form>
-                                
-                              </Card>
-                        
-                  </Row>
-                </CardBody>
-              </Card>
-            </Col>
-        </Row>
-        {modal || modal2  || modal3 || modal4 ? 
-      (
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    try {
+      return new Date(dateString).toLocaleString();
+    } catch {
+      return dateString;
+    }
+  };
+
+  const handleDataReload = () => {
+    console.log("Reloading verification data...");
+    loadData()
+      .then(() => {
+        console.log("Verification data reloaded successfully");
+        // toast.success("Data refreshed successfully", {
+        //   position: toast.POSITION.TOP_RIGHT,
+        // });
+
+        // Call the callback if provided (for embedded usage)
+        if (onActionComplete && typeof onActionComplete === "function") {
+          onActionComplete();
+        }
+      })
+      .catch((error) => {
+        console.error("Error reloading data:", error);
+        toast.error("Error refreshing data", {
+          position: toast.POSITION.TOP_RIGHT,
+        });
+      });
+  };
+
+  const generateTableRows = () => {
+    if (loading) {
+      return (
+        <tr>
+          <td colSpan="8" className="text-center">
+            <Spinner color="primary" /> Loading Please Wait
+          </td>
+        </tr>
+      );
+    }
+
+    if (
+      !fetchTestOrders?.labOrder?.tests ||
+      fetchTestOrders.labOrder.tests.length === 0
+    ) {
+      return (
+        <tr>
+          <td colSpan="8" className="text-center">
+            No test orders found
+          </td>
+        </tr>
+      );
+    }
+
+    const rows = [];
+
+    fetchTestOrders.labOrder.tests.forEach((test) => {
+      if (test.samples && test.samples.length > 0) {
+        test.samples.forEach((sample) => {
+          if (sample.dateSampleCollected && !sample.dateSampleVerified) {
+            rows.push(
+              <tr key={`${test.id}-${sample.id || sample.sampleNumber}`}>
+                <td>{test.labTestGroupName}</td>
+                <td>{test.labTestName}</td>
+                <td>{sample.sampleNumber}</td>
+                <td>
+                  <Badge color="primary">
+                    {sample.sampleTypeName || "N/A"}
+                  </Badge>
+                </td>
+                <td>{formatDate(sample.dateSampleCollected)}</td>
+                <td>{getSampleStatus(test.labTestOrderStatus)}</td>
+                <td>{getSampleActions(test, sample)}</td>
+              </tr>
+            );
+          }
+        });
+      }
+    });
+
+    if (rows.length === 0) {
+      return (
+        <tr>
+          <td colSpan="8" className="text-center">
+            No samples ready for verification
+          </td>
+        </tr>
+      );
+    }
+
+    return rows;
+  };
+
+  return (
+    <div>
+      {/* Only show breadcrumb when not embedded */}
+      {!isEmbedded && (
         <>
-            <SampleVerification modalstatus={modal} togglestatus={toggleModal} datasample={collectModal} handDataReload={handDataReload}/>
-            {/* <ModalSampleTransfer modalstatus={modal2} togglestatus={toggleModal2} datasample={collectModal} labnumber={labNumber!=="" ? labNumber : labNum}/> */}
-            {/*<ModalViewResult modalstatus={modal3} togglestatus={toggleModal3} datasample={collectModal} />*/}
-            {/* <TransferModalConfirmation modalstatus={modal4} togglestatusConfirmation={toggleModal4} datasample={collectModal} actionButton={transferSample} labnumber={labNumber!=="" ? labNumber : labNum}/> */}
-       </>
-      ) 
-      : ""
-      } 
-    </div>
-  )  
-}
+          <Breadcrumbs aria-label="breadcrumb">
+            <Link
+              color="inherit"
+              to={{
+                pathname: "/laboratory",
+                state: "sample-verification",
+              }}
+            >
+              Laboratory
+            </Link>
+            <Typography color="textPrimary">Sample Verification</Typography>
+          </Breadcrumbs>
 
-export default SampleList
+          <br />
+          <br />
+        </>
+      )}
+
+      <Row>
+        <Col>
+          <Card className="mb-12">
+            {/* <CardHeader>
+              <span style={{ textTransform: "capitalize" }}>
+                Samples Collected Details
+              </span>
+            </CardHeader> */}
+
+            <CardBody>
+              <Row>
+                <Card body>
+                  <Row className="align-items-center justify-content-between">
+                    <Col md="4">
+                      <FormGroup>
+                        <Label className={classes.label}>Lab Test Group</Label>
+                        <Input
+                          type="select"
+                          name="testgroup"
+                          id="testgroup"
+                          onChange={handleGroupFilter}
+                          className={classes.input}
+                        >
+                          <option value="All">All</option>
+                          {uniqueTestGroups.map((group) => (
+                            <option key={group} value={group}>
+                              {group}
+                            </option>
+                          ))}
+                        </Input>
+                      </FormGroup>
+                    </Col>
+                    <Col md="auto">
+                      <MatButton
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        onClick={loadData}
+                        startIcon={<RefreshIcon />}
+                      >
+                        Refresh
+                      </MatButton>
+                    </Col>
+                  </Row>
+
+                  <Form>
+                    <br />
+                    <Table striped responsive>
+                      <thead
+                        style={{ backgroundColor: "#014d88", color: "#fff" }}
+                      >
+                        <tr>
+                          <th>Test Group</th>
+                          <th>Test Type</th>
+                          <th>Sample ID</th>
+                          <th>Sample Type</th>
+                          <th>Date Collected</th>
+                          <th>Status</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>{generateTableRows()}</tbody>
+                    </Table>
+                  </Form>
+                </Card>
+              </Row>
+            </CardBody>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Modals */}
+      {verificationModal && (
+        <SampleVerification
+          modalstatus={verificationModal}
+          togglestatus={toggleVerificationModal}
+          datasample={selectedSample}
+          handDataReload={handleDataReload}
+        />
+      )}
+
+      {resultModal && (
+        <ViewResult
+          modalstatus={resultModal}
+          togglestatus={toggleResultModal}
+          datasample={selectedSample}
+        />
+      )}
+    </div>
+  );
+};
+
+export default SampleVerificationList;

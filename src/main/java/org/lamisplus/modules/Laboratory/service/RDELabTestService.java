@@ -30,19 +30,16 @@ public class RDELabTestService {
     private  final LabOrderRepository labOrderRepository;
 
     public List<RDELabOrderRequestDTO> SaveRDELabTests(List<RDELabOrderRequestDTO> labDtoList) {
-        // Prepare the order
         LabOrderDTO labOrderDTO = new LabOrderDTO();
         List<TestDTO> tests = new ArrayList<>();
 
-        // Iterate over the list and set data for each DTO
         for (RDELabOrderRequestDTO rdeTestDTO : labDtoList) {
-            // Set up lab order details (only needs to be done once per order, not per test)
-            if (labOrderDTO.getPatientId() == null) { // set these only once
+            if (labOrderDTO.getPatientId() == null) {
                 labOrderDTO.setOrderDate(rdeTestDTO.getSampleCollectionDate());
                 labOrderDTO.setLabOrderIndication(rdeTestDTO.getLabOrderIndication());
                 labOrderDTO.setOrderedDate(rdeTestDTO.getOrderedDate());
                 labOrderDTO.setPatientId(rdeTestDTO.getPatientId());
-                labOrderDTO.setVisitId(0); //TODO: set visit ID
+                labOrderDTO.setVisitId(0);
                 if (rdeTestDTO.getClinicianName() == null) {
                     labOrderDTO.setUserId(rdeTestDTO.getOrderBy());
                 } else {
@@ -50,7 +47,6 @@ public class RDELabTestService {
                 }
             }
 
-            // Create a new TestDTO object for each test in the list
             TestDTO test = new TestDTO();
             test.setLabTestId(rdeTestDTO.getLabTestId());
             test.setLabTestGroupId(rdeTestDTO.getLabTestGroupId());
@@ -70,7 +66,6 @@ public class RDELabTestService {
         labOrderDTO.setTests(tests);
         LabOrderResponseDTO responseDTO = labOrderService.Save(labOrderDTO);
 
-        // Process samples and results for each test in the response
         for (TestResponseDTO test : responseDTO.getTests().stream()
                 .filter(x -> x.getArchived().equals(0)).collect(Collectors.toList())) {
 
@@ -80,7 +75,6 @@ public class RDELabTestService {
 
             if (matchingDTO == null) continue;
 
-            // Save sample
             SampleDTO sample = new SampleDTO();
             sample.setDateSampleCollected(matchingDTO.getSampleCollectionDate());
             sample.setSampleCollectedBy(matchingDTO.getSampleCollectedBy());
@@ -98,7 +92,6 @@ public class RDELabTestService {
 
             SampleDTO savedSample = sampleService.Save(matchingDTO.getLabNumber(), sample);
 
-            // Save verification info
             Sample verifiedSample = sampleRepository.findByIdAndArchived(savedSample.getId(), 0).orElse(null);
             if (verifiedSample != null) {
                 verifiedSample.setDateSampleVerified(matchingDTO.getSampleCollectionDate());
@@ -107,7 +100,6 @@ public class RDELabTestService {
                 sampleRepository.save(verifiedSample);
             }
 
-            // Save result if available
             if (matchingDTO.getResult() != null && !matchingDTO.getResult().trim().isEmpty()) {
                 ResultDTO result = new ResultDTO();
                 result.setTestId(test.getId());

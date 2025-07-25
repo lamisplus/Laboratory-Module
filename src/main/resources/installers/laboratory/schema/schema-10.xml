@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="202407-010" author="basil-cleanup">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="laboratory_order"/>
+            <tableExists tableName="patient_person"/>
+        </preConditions>
+        <sqlFile dbms="postgresql"
+                 path="updates-8.sql"
+                 relativeToChangelogFile="true"
+                 splitStatements="false"
+                 stripComments="true"/>
+        <rollback>
+            -- No rollback for data cleanup operation
+            -- This is a one-time maintenance operation
+            SELECT 'Rollback not supported for orphaned data cleanup' as message;
+        </rollback>
+    </changeSet>
+</databaseChangeLog> 

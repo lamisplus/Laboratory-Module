@@ -13,14 +13,13 @@ public class HttpConnectionManager {
     public String get(String url) throws Exception {
         Request request = new Request.Builder()
                 .url(url)
-                .addHeader("custom-key", "lamisplus")  // add request headers
+                .addHeader("custom-key", "lamisplus")
                 .addHeader("User-Agent", "OkHttp Bot")
                 .build();
 
         try (Response response = httpClient.newCall(request).execute()) {
             if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
 
-            // Get response body
             return Objects.requireNonNull(response.body()).string();
         }
     }
