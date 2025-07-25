@@ -277,9 +277,10 @@ const SampleList = (props) => {
   };
 
   // Check if we have permission to collect samples
-  const hasCollectionPermission =
-    permissions.includes("collect_samples") ||
-    permissions.includes("all_permission");
+  // const hasCollectionPermission =
+  //   permissions.includes("collect_samples")
+  //   // ||
+  //   // permissions.includes("all_permission");
 
   return (
     <div>
@@ -371,11 +372,11 @@ const SampleList = (props) => {
                                     {sampleStatus(row.labTestOrderStatus)}
                                   </td>
                                   <td>
-                                    {hasCollectionPermission &&
+                                    {
                                       sampleAction(
                                         row,
                                         fetchTestOrders.labOrder.orderDate
-                                      )}
+                                     )}
                                   </td>
                                 </tr>
                               )
