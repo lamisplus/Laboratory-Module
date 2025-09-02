@@ -25,6 +25,7 @@ import TextField from "@material-ui/core/TextField";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import { token, url } from "../../../../api";
 import { toast } from "react-toastify";
+import { getUser } from "../../../../utils/localstorage";
 
 const useStyles = makeStyles((theme) => ({
   button: {
@@ -53,7 +54,7 @@ const SampleCollection = (props) => {
 
   const [loading, setLoading] = useState(false);
   const [sampleTypes, setSampleTypes] = useState([]);
-  const [users, setUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [selectedSampleTypes, setSelectedSampleTypes] = useState([]);
 
   const [formData, setFormData] = useState({
@@ -116,15 +117,19 @@ const SampleCollection = (props) => {
     }
   };
 
-  const loadUsers = async () => {
+  const loadCurrentUser = async () => {
     try {
-      const response = await axios.get(`${url}users`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUsers(response.data);
+      const user = await getUser();
+      setCurrentUser(user);
+      if (user && user.id) {
+        setFormData(prev => ({
+          ...prev,
+          sample_collected_by: user.id.toString(),
+        }));
+      }
     } catch (error) {
-      console.error("Error loading users:", error);
-      toast.error("Error loading users", {
+      console.error("Error loading current user:", error);
+      toast.error("Error loading current user", {
         position: toast.POSITION.TOP_RIGHT,
       });
     }
@@ -133,7 +138,7 @@ const SampleCollection = (props) => {
   useEffect(() => {
     if (modalstatus && datasample.id) {
       loadSampleTypes();
-      loadUsers();
+      loadCurrentUser();
     }
   }, [modalstatus, datasample]);
 
@@ -233,7 +238,7 @@ const SampleCollection = (props) => {
       console.log("Sample collection response:", response.data);
 
       setFormData({
-        sample_collected_by: "",
+        sample_collected_by: currentUser?.id?.toString() || "",
         sample_comment: "",
         sample_ID: "",
         date_sample_collected: new Date().toISOString().substr(0, 16),
@@ -404,13 +409,14 @@ const SampleCollection = (props) => {
                       value={formData.sample_collected_by}
                       onChange={handleInputChange}
                       invalid={!!errors.sample_collected_by}
+                      disabled
                     >
                       <option value="">Select laboratory scientist</option>
-                      {users.map((user) => (
-                        <option key={user.id} value={user.id}>
-                          {user.firstName} {user.lastName}
+                      {currentUser && (
+                        <option key={currentUser.id} value={currentUser.id}>
+                          {currentUser.firstName} {currentUser.lastName}
                         </option>
-                      ))}
+                      )}
                     </Input>
                     {errors.sample_collected_by && (
                       <FormFeedback>{errors.sample_collected_by}</FormFeedback>

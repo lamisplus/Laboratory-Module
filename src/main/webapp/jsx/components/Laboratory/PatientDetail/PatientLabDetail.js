@@ -6,6 +6,8 @@ import PatientTestOrders from "./PatientTestOrders";
 import PatientSampleVerification from "./PatientSampleVerification";
 import PatientResultReporting from "./PatientResultReporting";
 import { useLaboratory } from "../../../context/LaboratoryContext";
+import { url as baseUrl, token } from "../../../../api";
+import axios from "axios";
 
 const PatientLabDetail = () => {
   const location = useLocation();
@@ -49,21 +51,26 @@ const PatientLabDetail = () => {
     }
   }, [location.state, patient]);
 
+  // Debug: Log patient data when it changes
+  useEffect(() => {
+    if (patient) {
+      console.log("PatientLabDetail - Current patient data:", patient);
+      console.log("PatientLabDetail - Patient ID:", patient.id || patient.patientId);
+    }
+  }, [patient]);
+
   // Fetch user permissions
   useEffect(() => {
     const userPermission = async () => {
       try {
-        const response = await fetch('/api/v1/account', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
+        const response = await axios.get(`${baseUrl}account`, {
+          headers: { Authorization: `Bearer ${token}` }
         });
-        if (response.ok) {
-          const data = await response.json();
-          setPermissions(data.permissions || []);
-        }
+        setPermissions(response.data.permissions || []);
       } catch (error) {
         console.error("Error fetching permissions:", error);
+        // Don't fail the component if permissions fail to load
+        setPermissions([]);
       }
     };
 

@@ -65,6 +65,9 @@ const PatientTestOrders = ({ patient, permissions }) => {
   const [loading, setLoading] = useState(false);
   const [errorCount, setErrorCount] = useState(0);
 
+
+
+
   // Handle order selection for sample collection
   const handleViewOrder = (orderData) => {
     console.log("Viewing order for sample collection:", orderData);
@@ -79,7 +82,7 @@ const PatientTestOrders = ({ patient, permissions }) => {
   // Fetch patient-specific test orders from pending-sample-collection
   const handlePulledData = useCallback((query) =>
     new Promise((resolve, reject) => {
-      if (!patient?.id) {
+      if (!patient?.id && !patient?.patientId) {
         resolve({
           data: [],
           page: 0,
@@ -87,6 +90,8 @@ const PatientTestOrders = ({ patient, permissions }) => {
         });
         return;
       }
+
+      const patientId = patient.id || patient.patientId;
 
       setLoading(true);
 
@@ -103,13 +108,13 @@ const PatientTestOrders = ({ patient, permissions }) => {
         });
       }, 30000); // 30 second timeout
 
-      axios
-        .get(
-          `${url}laboratory/orders/pending-sample-collection/patients/${patient.id}?pageNo=${query.page}&pageSize=${query.pageSize}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        )
+              axios
+          .get(
+            `${url}laboratory/orders/pending-sample-collection/patients/${patientId}?pageNo=${query.page}&pageSize=${query.pageSize}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          )
         .then((resp) => {
           clearTimeout(timeoutId);
           setLoading(false);
@@ -131,7 +136,7 @@ const PatientTestOrders = ({ patient, permissions }) => {
           // No need to filter - backend now returns only patient-specific data
           const patientRecords = resp.data.records;
 
-          console.log(`Found ${patientRecords.length} orders for patient ${patient.id}`);
+          console.log(`Found ${patientRecords.length} orders for patient ${patientId}`);
 
           resolve({
             data: patientRecords.map((row) => ({
@@ -160,7 +165,7 @@ const PatientTestOrders = ({ patient, permissions }) => {
                       handleViewOrder({
                         ...row,
                         orderId: row.orderId,
-                        patientId: patient.id,
+                        patientId: patientId,
                         patientFirstName: patient.firstName,
                         patientLastName: patient.surname,
                         patientHospitalNumber: patient.hospitalNumber,

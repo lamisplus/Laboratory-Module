@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
-import {Link} from "react-router-dom";
+import {Link, useHistory} from "react-router-dom";
 import classNames from 'classnames';
 import ExpansionPanel from '@material-ui/core/ExpansionPanel';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
@@ -58,6 +58,7 @@ const styles = theme => ({
 function PatientCard(props) {
 
     const { classes } = props;
+    const history = useHistory(); // Add useHistory hook
 
     const patientObj = props.patientObj ? props.patientObj : {}
 
@@ -120,6 +121,11 @@ function PatientCard(props) {
       } else {
         return "";
       }
+    };
+
+    // Function to handle going back
+    const handleGoBack = () => {
+        history.goBack(); // or history.go(-1)
     };
 
   
@@ -214,7 +220,8 @@ function PatientCard(props) {
                 >
                   <span style={{ color: "#000" }}>
                     {" "}
-                    Address: <b style={{ color: "#0B72AA" }}> </b>
+                    Address: <b style={{ color: "#0B72AA" }}>{patientObj.address}
+                    </b>
                   </span>
                 </Col>
 
@@ -230,22 +237,20 @@ function PatientCard(props) {
 
         <ExpansionPanelActions expandIcon={<ExpandMoreIcon />}>
           <div className="float-end" style={{ floated: "right" }}>
-            <Link to={"/"}>
-              <Button floated="right" style={{ padding: "0px" }}>
-                <MatButton
-                  variant="contained"
-                  floated="right"
-                  startIcon={<TiArrowBack />}
-                  style={{
-                    backgroundColor: "rgb(153, 46, 98)",
-                    color: "#fff",
-                    height: "35px",
-                  }}
-                >
-                  <span style={{ textTransform: "capitalize" }}>Back</span>
-                </MatButton>
-              </Button>
-            </Link>
+            <Button floated="right" style={{ padding: "0px" }} onClick={handleGoBack}>
+              <MatButton
+                variant="contained"
+                floated="right"
+                startIcon={<TiArrowBack />}
+                style={{
+                  backgroundColor: "rgb(153, 46, 98)",
+                  color: "#fff",
+                  height: "35px",
+                }}
+              >
+                <span style={{ textTransform: "capitalize" }}>Back</span>
+              </MatButton>
+            </Button>
           </div>
         </ExpansionPanelActions>
       </ExpansionPanel>

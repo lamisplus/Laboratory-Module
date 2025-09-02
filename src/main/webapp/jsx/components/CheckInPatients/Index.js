@@ -125,7 +125,7 @@ const CheckedInPatients = (props) => {
     if (
       msg &&
       msg?.toLowerCase()?.includes("check") &&
-      msg?.toLowerCase()?.includes("hiv")
+      msg?.toLowerCase()?.includes("laboratory")
     ) {
       setTableRefreshTrigger((prev) => prev + 1);
     }

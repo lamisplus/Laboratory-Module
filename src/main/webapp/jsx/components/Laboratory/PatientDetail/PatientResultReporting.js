@@ -65,6 +65,8 @@ const PatientResultReporting = ({ patient, permissions }) => {
   const [loading, setLoading] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
+
+
   
   const handleViewOrder = (orderData) => {
     console.log("Viewing order for result reporting:", orderData);
@@ -79,7 +81,7 @@ const PatientResultReporting = ({ patient, permissions }) => {
   
   const getData = useCallback((query) =>
     new Promise((resolve, reject) => {
-      if (!patient?.id) {
+      if (!patient?.id && !patient?.patientId) {
         resolve({
           data: [],
           page: 0,
@@ -87,6 +89,8 @@ const PatientResultReporting = ({ patient, permissions }) => {
         });
         return;
       }
+
+      const patientId = patient.id || patient.patientId;
 
       setLoading(true);
 
@@ -103,13 +107,13 @@ const PatientResultReporting = ({ patient, permissions }) => {
         });
       }, 30000); // 30 second timeout
 
-      axios
-        .get(
-          `${url}laboratory/orders/pending-results/patients/${patient.id}?pageNo=${query.page}&pageSize=${query.pageSize}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        )
+              axios
+          .get(
+            `${url}laboratory/orders/pending-results/patients/${patientId}?pageNo=${query.page}&pageSize=${query.pageSize}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          )
         .then((resp) => {
           clearTimeout(timeoutId);
           setLoading(false);
@@ -131,7 +135,7 @@ const PatientResultReporting = ({ patient, permissions }) => {
           
           const patientRecords = resp.data.records;
 
-          console.log(`Found ${patientRecords.length} result reporting records for patient ${patient.id}`);
+          console.log(`Found ${patientRecords.length} result reporting records for patient ${patientId}`);
 
           resolve({
             data: patientRecords.map((row) => ({
@@ -152,7 +156,7 @@ const PatientResultReporting = ({ patient, permissions }) => {
                   onClick={() => handleViewOrder({
                     ...row,
                     orderId: row.orderId,
-                    patientId: patient.id,
+                    patientId: patientId,
                     patientFirstName: patient.firstName,
                     patientLastName: patient.surname,
                     patientHospitalNumber: patient.hospitalNumber,
