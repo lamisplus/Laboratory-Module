@@ -173,8 +173,8 @@ public class RDELabTestService {
 
 
         TestDTO test = testService.FindById(rdeTestDTO.getId());
-        //test.setLabTestId(rdeTestDTO.getLabTestId());
-        //test.setLabTestGroupId(rdeTestDTO.getLabTestGroupId());
+        test.setLabTestId(rdeTestDTO.getLabTestId());
+        test.setLabTestGroupId(rdeTestDTO.getLabTestGroupId());
         test.setViralLoadIndication(rdeTestDTO.getViralLoadIndication());
         test.setDescription(rdeTestDTO.getComments());
         test.setLabOrderIndication(rdeTestDTO.getLabOrderIndication());
