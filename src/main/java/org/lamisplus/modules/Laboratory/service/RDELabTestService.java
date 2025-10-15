@@ -7,6 +7,7 @@ import org.lamisplus.modules.Laboratory.domain.entity.LabOrder;
 import org.lamisplus.modules.Laboratory.domain.entity.Sample;
 import org.lamisplus.modules.Laboratory.repository.LabOrderRepository;
 import org.lamisplus.modules.Laboratory.repository.SampleRepository;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -16,6 +17,7 @@ import static org.lamisplus.modules.Laboratory.utility.LabUtils.*;
 
 
 @Service
+@Primary
 @RequiredArgsConstructor
 public class RDELabTestService {
     private final LabOrderService labOrderService;
