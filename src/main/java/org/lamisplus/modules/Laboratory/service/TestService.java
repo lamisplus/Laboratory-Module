@@ -10,6 +10,7 @@ import org.lamisplus.modules.Laboratory.repository.TestRepository;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -39,6 +40,7 @@ public class TestService {
         return userWithRoles.map (User::getCurrentOrganisationUnitId).orElse (null);
     }
 
+    @Transactional
     public TestDTO Update(int order_id, TestDTO testDTO){
         // Fetch the existing entity from database to preserve all fields
         Test existingTest = repository.findByIdAndArchived(testDTO.getId(), 0)

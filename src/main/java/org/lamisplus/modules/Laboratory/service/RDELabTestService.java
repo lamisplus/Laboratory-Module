@@ -9,6 +9,7 @@ import org.lamisplus.modules.Laboratory.repository.LabOrderRepository;
 import org.lamisplus.modules.Laboratory.repository.SampleRepository;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -165,8 +166,10 @@ public class RDELabTestService {
         return labDtoList;
     }
 
+    @Transactional
     public RDELabOrderRequestDTO UpdateRDELabTest(int orderId, RDELabOrderRequestDTO rdeTestDTO){
-        LabOrder labOrder = labOrderRepository.findByIdAndArchived(rdeTestDTO.getOrderId(), 0).orElse(null);
+        LabOrder labOrder = labOrderRepository.findByIdAndArchived(rdeTestDTO.getOrderId(), 0)
+                .orElseThrow(() -> new RuntimeException("Lab order not found with id: " + rdeTestDTO.getOrderId()));
 
         labOrder.setOrderedDate(rdeTestDTO.getOrderedDate());
         labOrder.setLabOrderIndication(rdeTestDTO.getLabOrderIndication());
@@ -197,47 +200,50 @@ public class RDELabTestService {
         sample.setTestId(test.getId());
         sample.setSampleNumber(rdeTestDTO.getSampleNumber());
         sample.setSampleTypeId(rdeTestDTO.getSampleTypeId());
-        sampleService.Save(rdeTestDTO.getLabNumber(), sample);
+        sampleService.Update(sample.getId(), sample);
 
-        //save result
-        ResultDTO result = resultService.GetResultsByTestId(test.getId());
-        result.setTestId(test.getId());
-        result.setResultReported(rdeTestDTO.getResult());
-        result.setResultReport(rdeTestDTO.getResult());
-        result.setResultReportedBy(rdeTestDTO.getResultReportedBy());
-        result.setAssayedBy(rdeTestDTO.getAssayedBy());
-        result.setPcrLabName(rdeTestDTO.getPcrLabName());
-        result.setPcrLabSampleNumber(rdeTestDTO.getPcrLabSampleNumber());
-        result.setCheckedBy(rdeTestDTO.getCheckedBy());
-        result.setResultReceivedBy(rdeTestDTO.getResultReportedBy());
-        result.setApprovedBy(rdeTestDTO.getApprovedBy());
-        result.setDateApproved(rdeTestDTO.getDateApproved());
-        try {
-            result.setDateSampleReceivedAtPcrLab(rdeTestDTO.getDateReceivedAtPcrLab().toLocalDate());
-        }catch (Exception ignored){
-        }
-        try {
-            result.setDateResultReported(rdeTestDTO.getDateResultReceived());
-        } catch (Exception ignored) {
-        }
-        try {
-            result.setDateAssayed(rdeTestDTO.getDateAssayedBy().atStartOfDay());
-        } catch (Exception ignored) {
-        }
-        try {
-            result.setDateChecked(rdeTestDTO.getDateChecked().atStartOfDay());
-        } catch (Exception ignored) {
-        }
-        try {
+        // Only save result if result data is provided
+        if (rdeTestDTO.getResult() != null && !rdeTestDTO.getResult().trim().isEmpty()) {
+            ResultDTO result = resultService.GetResultsByTestId(test.getId());
+            result.setTestId(test.getId());
+            result.setResultReported(rdeTestDTO.getResult());
+            result.setResultReport(rdeTestDTO.getResult());
+            result.setResultReportedBy(rdeTestDTO.getResultReportedBy());
             result.setDateResultReceived(rdeTestDTO.getDateResultReceived());
-        } catch (Exception ignored) {
-        }
-        try {
-            result.setDateResultReported(rdeTestDTO.getDateResultReceived());
-        } catch (Exception ignored) {
-        }
+            result.setAssayedBy(rdeTestDTO.getAssayedBy());
+            result.setPcrLabName(rdeTestDTO.getPcrLabName());
+            result.setPcrLabSampleNumber(rdeTestDTO.getPcrLabSampleNumber());
+            result.setCheckedBy(rdeTestDTO.getCheckedBy());
+            result.setResultReceivedBy(rdeTestDTO.getResultReportedBy());
+            result.setApprovedBy(rdeTestDTO.getApprovedBy());
+            result.setDateApproved(rdeTestDTO.getDateApproved());
+            try {
+                result.setDateSampleReceivedAtPcrLab(rdeTestDTO.getDateReceivedAtPcrLab().toLocalDate());
+            } catch (Exception ignored) {
+            }
+            try {
+                result.setDateResultReported(rdeTestDTO.getDateResultReceived());
+            } catch (Exception ignored) {
+            }
+            try {
+                result.setDateAssayed(rdeTestDTO.getDateAssayedBy().atStartOfDay());
+            } catch (Exception ignored) {
+            }
+            try {
+                result.setDateChecked(rdeTestDTO.getDateChecked().atStartOfDay());
+            } catch (Exception ignored) {
+            }
+            try {
+                result.setDateResultReceived(rdeTestDTO.getDateResultReceived());
+            } catch (Exception ignored) {
+            }
+            try {
+                result.setDateResultReported(rdeTestDTO.getDateResultReceived());
+            } catch (Exception ignored) {
+            }
 
-        resultService.Save(result);
+            resultService.Save(result);
+        }
 
         return rdeTestDTO;
     }
