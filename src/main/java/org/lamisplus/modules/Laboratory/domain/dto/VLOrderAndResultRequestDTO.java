@@ -1,7 +1,9 @@
 package org.lamisplus.modules.Laboratory.domain.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Data;
+import org.lamisplus.modules.Laboratory.util.EmptyStringToNullDeserializer;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -19,29 +21,42 @@ public class VLOrderAndResultRequestDTO {
     private Integer viralLoadIndication;
     private Integer sampleTypeId;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonDeserialize(using = EmptyStringToNullDeserializer.LocalDateTimeDeserializer.class)
     private LocalDateTime sampleCollectionDate;
     private String sampleCollectedBy;
     private String pcrLabName;
     private String pcrLabSampleNumber;
     private Integer sampleLoggedRemotely;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @JsonDeserialize(using = EmptyStringToNullDeserializer.LocalDateDeserializer.class)
     private LocalDate dateSampleLoggedRemotely;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonDeserialize(using = EmptyStringToNullDeserializer.LocalDateTimeDeserializer.class)
     private LocalDateTime dateReceivedAtPcrLab;
     private String result;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonDeserialize(using = EmptyStringToNullDeserializer.LocalDateTimeDeserializer.class)
     private LocalDateTime dateResultReceived;
     private String orderBy;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @JsonDeserialize(using = EmptyStringToNullDeserializer.LocalDateDeserializer.class)
     private LocalDate dateOrderBy;
     private String assayedBy;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @JsonDeserialize(using = EmptyStringToNullDeserializer.LocalDateDeserializer.class)
     private LocalDate dateAssayedBy;
     private String checkedBy;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @JsonDeserialize(using = EmptyStringToNullDeserializer.LocalDateDeserializer.class)
     private LocalDate dateChecked;
     private String approvedBy;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @JsonDeserialize(using = EmptyStringToNullDeserializer.LocalDateDeserializer.class)
     private LocalDate dateApproved;
     private String comments;
+
+    // Custom setter to handle empty strings for labNumber
+    public void setLabNumber(String labNumber) {
+        this.labNumber = (labNumber == null || labNumber.trim().isEmpty()) ? null : labNumber;
+    }
 }

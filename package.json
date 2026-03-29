@@ -21,6 +21,7 @@
     "@mui/lab": "^5.0.0-alpha.81",
     "@mui/material": "^5.7.0",
     "@mui/styles": "^5.7.0",
+    "@mui/icons-material": "^5.8.4",
     "@reach/menu-button": "^0.17.0",
     "@svg-maps/usa": "^1.1.1",
     "@svg-maps/world": "^1.0.1",
@@ -108,9 +109,12 @@
     "yup": "^0.32.8"
   },
   "scripts": {
-    "start": "cross-env react-scripts --openssl-legacy-provider start",
-    "build": "cross-env react-scripts --openssl-legacy-provider  build && cp -r build/* src/main/resources/views/static/laboratory/",
-    "test": "react-scripts test",
+    "start": "react-scripts start",
+    "jsreport": "jsreport-start",
+    "build": "react-scripts build && mkdir -p src/main/resources/views/static/laboratory && cp -r build/* src/main/resources/views/static/laboratory/",
+    "serve": "serve -s build",
+    "run-build": "react-scripts build && serve",
+    "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

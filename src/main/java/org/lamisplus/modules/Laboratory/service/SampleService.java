@@ -13,6 +13,7 @@ import org.lamisplus.modules.Laboratory.repository.TestRepository;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -174,6 +175,8 @@ public class SampleService {
             updatedSample.setFacilityId(existingSample.getFacilityId());
             updatedSample.setArchived(0);
 
+            // Commented out auto-generation logic - lab_number should remain null if not provided
+            /*
             String labNumber;
             if (existingSample.getTestId() != null) {
                 Test existingTest = testRepository.findById(existingSample.getTestId()).orElse(null);
@@ -196,6 +199,9 @@ public class SampleService {
                     System.err.println("Warning: Failed to update test status: " + e.getMessage());
                 }
             }
+            */
+
+            Sample savedSample = repository.save(updatedSample);
 
             return labMapper.tosSampleDto(savedSample);
 

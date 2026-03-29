@@ -10,6 +10,7 @@ import org.lamisplus.modules.Laboratory.repository.TestRepository;
 import org.lamisplus.modules.base.domain.entities.User;
 import org.lamisplus.modules.base.service.UserService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -39,10 +40,48 @@ public class TestService {
         return userWithRoles.map (User::getCurrentOrganisationUnitId).orElse (null);
     }
 
+    @Transactional
     public TestDTO Update(int order_id, TestDTO testDTO){
-        Test test = labMapper.toTest(testDTO);
-        test.setArchived(0);
-        return labMapper.toTestDto(repository.save(test));
+        // Fetch the existing entity from database to preserve all fields
+        Test existingTest = repository.findByIdAndArchived(testDTO.getId(), 0)
+                .orElseThrow(() -> new RuntimeException("Test not found with id: " + testDTO.getId()));
+
+        // Update only the fields that are provided in the DTO
+        if(testDTO.getLabTestId() != null) {
+            existingTest.setLabTestId(testDTO.getLabTestId());
+        }
+        if(testDTO.getLabTestGroupId() != null) {
+            existingTest.setLabTestGroupId(testDTO.getLabTestGroupId());
+        }
+        if(testDTO.getDescription() != null) {
+            existingTest.setDescription(testDTO.getDescription());
+        }
+        if(testDTO.getClinicalNote() != null) {
+            existingTest.setClinicalNote(testDTO.getClinicalNote());
+        }
+        if(testDTO.getLabNumber() != null) {
+            existingTest.setLabNumber(testDTO.getLabNumber());
+        }
+        if(testDTO.getOrderPriority() != null) {
+            existingTest.setOrderPriority(testDTO.getOrderPriority());
+        }
+        if(testDTO.getLabTestOrderStatus() != null) {
+            existingTest.setLabTestOrderStatus(testDTO.getLabTestOrderStatus());
+        }
+        if(testDTO.getViralLoadIndication() != null) {
+            existingTest.setViralLoadIndication(testDTO.getViralLoadIndication());
+        }
+        if(testDTO.getLabOrderId() != null) {
+            existingTest.setLabOrderId(testDTO.getLabOrderId());
+        }
+        if(testDTO.getPatientUuid() != null) {
+            existingTest.setPatientUuid(testDTO.getPatientUuid());
+        }
+
+        // Ensure archived remains 0
+        existingTest.setArchived(0);
+
+        return labMapper.toTestDto(repository.save(existingTest));
     }
 
     public String Delete(Integer id){

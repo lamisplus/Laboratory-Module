@@ -79,3 +79,13 @@ export const getRoles = async () => {
   }
   return roles;
 };
+
+
+export const getUser = async () => {
+  const roles = getStorageValues("user_account");
+  if (!roles) {
+    const data = await fetchAndStoreAccountData();
+    return data?.currentUser_Roles;
+  }
+  return roles;
+};

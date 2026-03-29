@@ -19,6 +19,7 @@ import { token, url } from "../../../../api";
 import { Spinner } from "reactstrap";
 import { toast} from "react-toastify";
 import { useHistory } from 'react-router-dom';
+import { getUser } from "../../../../utils/localstorage";
 
 const useStyles = makeStyles(theme => ({
     card: {
@@ -108,22 +109,31 @@ const ModalVerifySample = (props) => {
         verification_status:"",
         comment_sample_verified:""
     });
-    const [users, setUsers] = useState([])
+    const [currentUser, setCurrentUser] = useState(null)
     const [errors, setErrors] = useState({});
 
 
-    const loginUser = async () => {
+    const loadCurrentUser = async () => {
         try {
-             const response = await axios.get(`${url}users`, { headers: {"Authorization" : `Bearer ${token}`} });
-             setUsers(response.data);
+            const user = await getUser();
+            setCurrentUser(user);
+            if (user && user.id) {
+                setotherFields(prev => ({
+                    ...prev,
+                    sample_verified_by: user.id.toString(),
+                }));
+            }
         }
         catch(error) {
-
+            console.error("Error loading current user:", error);
+            toast.error("Error loading current user", {
+                position: toast.POSITION.TOP_RIGHT,
+            });
         }
     }
 
     useEffect(() => {
-        loginUser()
+        loadCurrentUser()
         async function getCharacters() {
             try {
             } catch (error) {
@@ -264,7 +274,7 @@ const ModalVerifySample = (props) => {
                                                   <Label for="verification_status" className={classes.label}>Approve Sample</Label>
 
                                                     <select
-                                                        className={classes.input}
+                                                        // className={classes.input}
                                                         className="form-control"
                                                         name="verification_status"
                                                         id="verification_status"
@@ -290,7 +300,7 @@ const ModalVerifySample = (props) => {
                                                     <Label for="sample_verified_by" className={classes.label}>Verify by </Label>
 
                                                       <select
-                                                          className={classes.input}
+                                                        //   className={classes.input}
                                                           className="form-control"
                                                           name="sample_verified_by"
                                                           id="sample_verified_by"
@@ -298,15 +308,15 @@ const ModalVerifySample = (props) => {
                                                           borderRadius:'0px',
                                                           fontSize:'14px',
                                                           color:'#000'}}
-                                                          vaule={otherFields.sample_verified_by}
+                                                          value={otherFields.sample_verified_by}
                                                           onChange={handleOtherFieldInputChange}
+                                                          disabled
                                                           {...(errors.sample_verified_by && { invalid: true})}
                                                         >
                                                           <option value={""}> Sample verified by</option>
-                                                           {users && users.map((user, i) =>
-                                                           (
-                                                               <option key={i} value={user.id}>{user.firstName}</option>
-                                                           ))}
+                                                           {currentUser && (
+                                                               <option key={currentUser.id} value={currentUser.id}>{currentUser.firstName} {currentUser.lastName}</option>
+                                                           )}
                                                       </select>
                                                         {errors.sample_verified_by !="" ? (
                                                           <span className={classes.error}>{errors.sample_verified_by}</span>

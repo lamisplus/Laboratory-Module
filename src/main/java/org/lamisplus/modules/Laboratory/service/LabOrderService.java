@@ -72,6 +72,7 @@ public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
         labOrder.setPatientUuid(person.getUuid());
         labOrder.setFacilityId(getCurrentUserOrganization());
         labOrder.setArchived(0);
+        labOrder.setUserId(labOrderDTO.getUserId());
 
         if (labOrderDTO.getOrderedDate() != null) {
             labOrder.setOrderedDate(labOrderDTO.getOrderedDate());
@@ -150,12 +151,88 @@ public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
     }
 
     public LabOrderResponseDTO Update(int order_id, LabOrderDTO labOrderDTO){
-        LabOrder labOrder = labMapper.toLabOrder(labOrderDTO);
-        labOrder.setUserId(SecurityUtils.getCurrentUserLogin().orElse(""));
-        for (Test test:labOrder.getTests()){
-            test.setLabTestOrderStatus(PENDING_SAMPLE_COLLECTION);
+        // First, find the existing lab order
+        LabOrder existingLabOrder = labOrderRepository.findById(order_id)
+            .orElseThrow(() -> new RuntimeException("Lab order with id " + order_id + " not found"));
+        
+        // Update the existing lab order properties directly
+        existingLabOrder.setPatientId(labOrderDTO.getPatientId());
+        existingLabOrder.setVisitId(labOrderDTO.getVisitId());
+        existingLabOrder.setOrderDate(labOrderDTO.getOrderDate());
+        existingLabOrder.setUserId(labOrderDTO.getUserId() != null ? labOrderDTO.getUserId() : SecurityUtils.getCurrentUserLogin().orElse(""));
+        
+        if (labOrderDTO.getOrderedDate() != null) {
+            existingLabOrder.setOrderedDate(labOrderDTO.getOrderedDate());
         }
-        return labMapper.toLabOrderResponseDto(labOrderRepository.save(labOrder));
+        if (labOrderDTO.getLabOrderIndication() != null) {
+            existingLabOrder.setLabOrderIndication(labOrderDTO.getLabOrderIndication());
+        }
+        
+        // Handle tests properly - update existing tests and add new ones
+        if (labOrderDTO.getTests() != null) {
+            List<Test> updatedTests = new ArrayList<>();
+            
+            for (TestDTO testDTO : labOrderDTO.getTests()) {
+               
+                Test existingTest = existingLabOrder.getTests().stream()
+                    .filter(test -> test.getLabTestId().equals(testDTO.getLabTestId()))
+                    .findFirst()
+                    .orElse(null);
+                
+                if (existingTest != null) {
+                    
+                    existingTest.setDescription(testDTO.getDescription());
+                    existingTest.setLabTestGroupId(testDTO.getLabTestGroupId());
+                    existingTest.setOrderPriority(testDTO.getOrderPriority());
+                    existingTest.setLabTestOrderStatus(PENDING_SAMPLE_COLLECTION);
+                    
+                    if (testDTO.getClinicalNote() != null) {
+                        existingTest.setClinicalNote(testDTO.getClinicalNote());
+                    }
+                    if (testDTO.getLabNumber() != null) {
+                        existingTest.setLabNumber(testDTO.getLabNumber());
+                    }
+                    if (testDTO.getViralLoadIndication() != null) {
+                        existingTest.setViralLoadIndication(testDTO.getViralLoadIndication());
+                    }
+                    
+                    updatedTests.add(existingTest);
+                } else {
+                   
+                    Test newTest = new Test();
+                    newTest.setUuid(UUID.randomUUID().toString());
+                    newTest.setPatientId(labOrderDTO.getPatientId());
+                    newTest.setLabTestId(testDTO.getLabTestId());
+                    newTest.setDescription(testDTO.getDescription());
+                    newTest.setLabTestGroupId(testDTO.getLabTestGroupId());
+                    newTest.setOrderPriority(testDTO.getOrderPriority());
+                    newTest.setLabTestOrderStatus(PENDING_SAMPLE_COLLECTION);
+                    newTest.setLabOrderId(order_id);
+                    newTest.setFacilityId(getCurrentUserOrganization());
+                    newTest.setArchived(0);
+                    
+                    if (testDTO.getClinicalNote() != null) {
+                        newTest.setClinicalNote(testDTO.getClinicalNote());
+                    }
+                    if (testDTO.getLabNumber() != null) {
+                        newTest.setLabNumber(testDTO.getLabNumber());
+                    }
+                    if (testDTO.getViralLoadIndication() != null) {
+                        newTest.setViralLoadIndication(testDTO.getViralLoadIndication());
+                    } else {
+                        newTest.setViralLoadIndication(0);
+                    }
+                    
+                    updatedTests.add(newTest);
+                }
+            }
+            
+            existingLabOrder.setTests(updatedTests);
+        }
+        
+        
+        LabOrder savedLabOrder = labOrderRepository.save(existingLabOrder);
+        return labMapper.toLabOrderResponseDto(savedLabOrder);
     }
 
     public String Delete(Integer id){
@@ -184,6 +261,159 @@ public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
     public List<PatientLabOrderDTO> GetAllLabOrders(){
         List<LabOrder> orders = labOrderRepository.findAllByFacilityIdAndArchived(getCurrentUserOrganization(), 0);
         return AppendPatientDetails(orders);
+    }
+
+    public List<PatientLabOrderDTO> GetAllLabOrders(int pageNo, int pageSize){
+        // Use Spring Data pagination
+        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
+        Page<LabOrder> ordersPage = labOrderRepository.findAllByFacilityIdAndArchived(
+                getCurrentUserOrganization(), 0, pageable);
+        return AppendPatientDetails(ordersPage.getContent());
+    }
+
+    /**
+     * More efficient method that fetches patient data directly from database
+     * instead of making individual API calls
+     */
+    public Map<String, Object> GetAllLabOrdersOptimized(int pageNo, int pageSize){
+        return GetAllLabOrdersOptimized(pageNo, pageSize, null);
+    }
+
+    /**
+     * More efficient method that fetches patient data directly from database
+     * with search functionality
+     */
+    public Map<String, Object> GetAllLabOrdersOptimized(int pageNo, int pageSize, String searchTerm){
+        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
+        Page<LabOrder> ordersPage;
+        
+        Log.info("Searching lab orders with term: " + searchTerm + ", page: " + pageNo + ", size: " + pageSize);
+        
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            // Use search query
+            try {
+                // Check if search term looks like a phone number (contains only digits)
+                if (searchTerm.trim().matches("\\d+")) {
+                    Log.info("Searching by phone number: " + searchTerm.trim());
+                    ordersPage = labOrderRepository.findAllByFacilityIdAndArchivedAndPhoneNumberContaining(
+                            getCurrentUserOrganization(), 0, searchTerm.trim(), pageable);
+                } else {
+                    Log.info("Searching by general term: " + searchTerm.trim());
+                    ordersPage = labOrderRepository.findAllByFacilityIdAndArchivedAndSearchTerm(
+                            getCurrentUserOrganization(), 0, searchTerm.trim(), pageable);
+                }
+                Log.info("Search query executed successfully. Found " + ordersPage.getTotalElements() + " results");
+            } catch (Exception e) {
+                Log.error("Error in search query: " + e.getMessage(), e);
+                // Fallback to regular query if search fails
+                ordersPage = labOrderRepository.findAllByFacilityIdAndArchived(
+                        getCurrentUserOrganization(), 0, pageable);
+            }
+        } else {
+            // Use regular query
+            ordersPage = labOrderRepository.findAllByFacilityIdAndArchived(
+                    getCurrentUserOrganization(), 0, pageable);
+        }
+        
+        return processLabOrdersWithPatientData(ordersPage, pageNo, pageSize, searchTerm);
+    }
+
+    /**
+     * Search lab orders by hospital number specifically
+     */
+    public Map<String, Object> SearchLabOrdersByHospitalNumber(int pageNo, int pageSize, String hospitalNumber){
+        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
+        Page<LabOrder> ordersPage = labOrderRepository.findAllByFacilityIdAndArchivedAndHospitalNumberContaining(
+                getCurrentUserOrganization(), 0, hospitalNumber.trim(), pageable);
+        
+        return processLabOrdersWithPatientData(ordersPage, pageNo, pageSize, "Hospital Number: " + hospitalNumber);
+    }
+
+    /**
+     * Search lab orders by phone number specifically
+     */
+    public Map<String, Object> SearchLabOrdersByPhoneNumber(int pageNo, int pageSize, String phoneNumber){
+        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by("id").descending());
+        Page<LabOrder> ordersPage = labOrderRepository.findAllByFacilityIdAndArchivedAndPhoneNumberContaining(
+                getCurrentUserOrganization(), 0, phoneNumber.trim(), pageable);
+        
+        return processLabOrdersWithPatientData(ordersPage, pageNo, pageSize, "Phone Number: " + phoneNumber);
+    }
+
+    /**
+     * Helper method to process lab orders with patient data
+     */
+    private Map<String, Object> processLabOrdersWithPatientData(Page<LabOrder> ordersPage, int pageNo, int pageSize, String searchTerm){
+        List<PatientLabOrderDTO> patientLabOrderDTOS = new ArrayList<>();
+        
+        if (ordersPage.getContent().isEmpty()) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("data", patientLabOrderDTOS);
+            result.put("totalElements", 0L);
+            result.put("totalPages", 0);
+            result.put("currentPage", pageNo);
+            result.put("pageSize", pageSize);
+            result.put("searchTerm", searchTerm);
+            return result;
+        }
+
+        // Extract unique patient IDs
+        Set<Long> uniquePatientIds = ordersPage.getContent().stream()
+                .map(order -> (long) order.getPatientId())
+                .collect(Collectors.toSet());
+
+        // Fetch patient data directly from database
+        Map<Long, Person> patientDataMap = new HashMap<>();
+        try {
+            List<Person> persons = personRepository.findAllById(uniquePatientIds);
+            for (Person person : persons) {
+                patientDataMap.put(person.getId(), person);
+            }
+        } catch (Exception e) {
+            Log.warn("Error in batch patient data fetching: " + e.getMessage());
+        }
+
+        // Process orders using the cached patient data
+        for (LabOrder order : ordersPage.getContent()) {
+            try {
+                Person person = patientDataMap.get((long) order.getPatientId());
+
+                if (person != null) {
+                    PatientLabOrderDTO dto = new PatientLabOrderDTO();
+                    dto.setPatientAddress(
+                            jsonNodeTransformer.getNodeValue(person.getAddress(), "address", "city", true));
+                    dto.setPatientDob(person.getDateOfBirth());
+                    dto.setPatientGender(
+                            jsonNodeTransformer.getNodeValue(person.getGender(), null, "display", false));
+                    dto.setPatientSex(person.getSex());
+                    dto.setPatientFirstName(person.getFirstName());
+                    dto.setPatientId(order.getPatientId());
+                    dto.setPatientHospitalNumber(jsonNodeTransformer.getNodeValue(person.getIdentifier(),
+                            "identifier", "value", true));
+                    dto.setPatientLastName(person.getSurname());
+                    dto.setPatientPhoneNumber(jsonNodeTransformer.getNodeValue(person.getContactPoint(),
+                            "contactPoint", "value", true));
+                    dto.setLabOrder(AppendAdditionalTestDetails(labMapper.toLabOrderResponseDto(order)));
+
+                    patientLabOrderDTOS.add(dto);
+                } else {
+                    Log.warn("Patient not found for order ID: " + order.getId() + ", patient ID: "
+                            + order.getPatientId() + " - excluding from results");
+                }
+            } catch (Exception e) {
+                Log.warn("Error processing order ID: " + order.getId() + ", patient ID: "
+                        + order.getPatientId() + " - " + e.getMessage());
+            }
+        }
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("data", patientLabOrderDTOS);
+        result.put("totalElements", ordersPage.getTotalElements());
+        result.put("totalPages", ordersPage.getTotalPages());
+        result.put("currentPage", pageNo);
+        result.put("pageSize", pageSize);
+        result.put("searchTerm", searchTerm);
+        return result;
     }
 
     public LabOrderListMetaDataDTO GetOrdersPendingSampleCollection(String searchParam, int pageNo, int pageSize) {
@@ -374,10 +604,40 @@ public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
 
     private List<PatientLabOrderDTO> AppendPatientDetails(List<LabOrder> orders){
         List<PatientLabOrderDTO> patientLabOrderDTOS = new ArrayList<>();
+        
+        if (orders == null || orders.isEmpty()) {
+            return patientLabOrderDTOS;
+        }
 
-        for (LabOrder order: orders) {
+        // Extract unique patient IDs
+        Set<Long> uniquePatientIds = orders.stream()
+                .map(order -> (long) order.getPatientId())
+                .collect(Collectors.toSet());
+
+        // Batch fetch all patient data
+        Map<Long, PersonResponseDto> patientDataMap = new HashMap<>();
+        try {
+            // If PersonService supports batch fetching, use it
+            // For now, we'll use the existing PersonRepository to fetch from database directly
+            List<Person> persons = personRepository.findAllById(uniquePatientIds);
+            for (Person person : persons) {
+                try {
+                    PersonResponseDto personResponseDTO = personService.getPersonById(person.getId());
+                    if (personResponseDTO != null) {
+                        patientDataMap.put(person.getId(), personResponseDTO);
+                    }
+                } catch (Exception e) {
+                    Log.warn("Error fetching patient details for patient ID: " + person.getId() + " - " + e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            Log.warn("Error in batch patient data fetching: " + e.getMessage());
+        }
+
+        // Process orders using the cached patient data
+        for (LabOrder order : orders) {
             try {
-                PersonResponseDto personResponseDTO = personService.getPersonById((long) order.getPatientId());
+                PersonResponseDto personResponseDTO = patientDataMap.get((long) order.getPatientId());
 
                 if (personResponseDTO != null) {
                     PatientLabOrderDTO dto = new PatientLabOrderDTO();
@@ -402,9 +662,8 @@ public LabOrderResponseDTO Save(LabOrderDTO labOrderDTO){
                             + order.getPatientId() + " - excluding from results");
                 }
             } catch (Exception e) {
-                Log.warn("Error fetching patient details for order ID: " + order.getId() + ", patient ID: "
+                Log.warn("Error processing order ID: " + order.getId() + ", patient ID: "
                         + order.getPatientId() + " - " + e.getMessage());
-
             }
         }
         return patientLabOrderDTOS;

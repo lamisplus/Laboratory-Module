@@ -31,6 +31,7 @@ import { Alert } from "reactstrap";
 import { Spinner } from "reactstrap";
 import { toast } from "react-toastify";
 import { useHistory } from "react-router-dom";
+import { getUser } from "../../../../utils/localstorage";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -102,7 +103,7 @@ const ModalSampleResult = (props) => {
 
   const patientId = props.patientId;
   const sample_type = datasample.sampleTypeName;
-  const [users, setUsers] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
 
   const lab_number = datasample.labNumber;
   const date_sample_collected = datasample.dateSampleCollected;
@@ -128,16 +129,25 @@ const ModalSampleResult = (props) => {
   const [errors, setErrors] = useState({});
   const [inputFlip, setInputFlip] = useState(2);
 
-  const loginUser = async () => {
+  const loadCurrentUser = async () => {
     try {
-      const response = await axios.get(`${url}users`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const user = await getUser();
+      setCurrentUser(user);
+      if (user && user.id) {
+        setOtherFields(prev => ({
+          ...prev,
+          result_reported_by: user.id.toString(),
+        }));
+      }
+    } catch (error) {
+      console.error("Error loading current user:", error);
+      toast.error("Error loading current user", {
+        position: toast.POSITION.TOP_RIGHT,
       });
-      setUsers(response.data);
-    } catch (error) {}
+    }
   };
   useEffect(() => {
-    loginUser();
+    loadCurrentUser();
   }, []);
 
   const handleOtherFieldInputChange = (e) => {
@@ -381,15 +391,15 @@ const ModalSampleResult = (props) => {
                         }}
                         value={otherfields.result_reported_by}
                         onChange={handleOtherFieldInputChange}
+                        disabled
                         {...(errors.result_reported_by && { invalid: true })}
                       >
                         <option value={""}> Sample result reported by</option>
-                        {users &&
-                          users.map((user, i) => (
-                            <option key={i} value={user.id}>
-                              {user.firstName}
+                        {currentUser && (
+                            <option key={currentUser.id} value={currentUser.id}>
+                              {currentUser.firstName} {currentUser.lastName}
                             </option>
-                          ))}
+                        )}
                       </select>
                       {errors.result_reported_by != "" ? (
                         <span className={classes.error}>

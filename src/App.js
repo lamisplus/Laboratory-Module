@@ -13,6 +13,7 @@ import TestResult from "./main/webapp/jsx/components/Laboratory/TestResult/Index
 import PatientTestOrderHistory from "./main/webapp/jsx/components/Laboratory/LabTestOrder/PatientTestOrderHistory";
 import PatientLabDetail from "./main/webapp/jsx/components/Laboratory/PatientDetail/PatientLabDetail";
 import { LaboratoryProvider } from "./main/webapp/jsx/context/LaboratoryContext";
+import CheckedInPatientsAlert from "./main/webapp/jsx/components/Globals/CheckinPatientsAlert";
 
 export default function App() {
   return (
@@ -21,6 +22,8 @@ export default function App() {
         <ToastContainer />
         {/* A <Switch> looks through its children <Route>s and
             renders the first one that matches the current URL. */}
+            <CheckedInPatientsAlert />
+           
         <Switch>
           <Route path="/test-order">
             <PatientTestOrderHistory />

@@ -12,6 +12,7 @@ import {
   TabPane,
 } from "reactstrap";
 import CheckInPatients from "./CheckInPatients/Index";
+import LaboratoryHistory from "./Laboratory/LaboratoryHistory/Index";
 import { labObj } from "./LabObj";
 
 import {token, url } from "../../api";
@@ -80,9 +81,7 @@ const Home = (props) => {
                   <CheckInPatients labObj={labObj} permissions={permissions} />
                 </TabPane>
                 <TabPane tabId="laboratory-history">
-                  <div className="text-center p-5">
-                    <h4>Laboratory History</h4>
-                  </div>
+                  <LaboratoryHistory />
                 </TabPane>
               </TabContent>
             </CardBody>

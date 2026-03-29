@@ -74,8 +74,67 @@ public class LaboratoryOrdersController {
     }
 
     @GetMapping("/orders")
-    public List<PatientLabOrderDTO> GetAllLabOrders(){
-        return labOrderService.GetAllLabOrders();
+    public ResponseEntity<?> GetAllLabOrders(
+            @RequestParam(defaultValue = "0") Integer pageNo,
+            @RequestParam(defaultValue = "50") Integer pageSize,
+            @RequestParam(required = false) String search) {
+        try {
+            // Add pagination to prevent infinite loops with large datasets
+            if (pageSize > 100) {
+                pageSize = 100; // Limit maximum page size
+            }
+            
+            Map<String, Object> result = labOrderService.GetAllLabOrdersOptimized(pageNo, pageSize, search);
+            
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            Log.error("Error fetching lab orders: " + e.getMessage(), e);
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Failed to fetch lab orders: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @GetMapping("/orders/search/hospital-number")
+    public ResponseEntity<?> SearchLabOrdersByHospitalNumber(
+            @RequestParam String hospitalNumber,
+            @RequestParam(defaultValue = "0") Integer pageNo,
+            @RequestParam(defaultValue = "50") Integer pageSize) {
+        try {
+            if (pageSize > 100) {
+                pageSize = 100;
+            }
+            
+            Map<String, Object> result = labOrderService.SearchLabOrdersByHospitalNumber(pageNo, pageSize, hospitalNumber);
+            
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            Log.error("Error searching lab orders by hospital number: " + e.getMessage(), e);
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Failed to search lab orders: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+
+    @GetMapping("/orders/search/phone-number")
+    public ResponseEntity<?> SearchLabOrdersByPhoneNumber(
+            @RequestParam String phoneNumber,
+            @RequestParam(defaultValue = "0") Integer pageNo,
+            @RequestParam(defaultValue = "50") Integer pageSize) {
+        try {
+            if (pageSize > 100) {
+                pageSize = 100;
+            }
+            
+            Map<String, Object> result = labOrderService.SearchLabOrdersByPhoneNumber(pageNo, pageSize, phoneNumber);
+            
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            Log.error("Error searching lab orders by phone number: " + e.getMessage(), e);
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Failed to search lab orders: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 
     @GetMapping("/orders/{id}")

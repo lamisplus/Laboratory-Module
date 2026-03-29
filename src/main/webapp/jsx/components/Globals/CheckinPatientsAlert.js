@@ -65,7 +65,7 @@ const CheckedInPatientsAlert = () => {
     if (
       msg &&
       msg?.toLowerCase()?.includes("check") &&
-      msg?.toLowerCase()?.includes("hiv")
+      msg?.toLowerCase()?.includes("laboratory")
     ) {
       showToast(msg, "messageReceived");
     }
