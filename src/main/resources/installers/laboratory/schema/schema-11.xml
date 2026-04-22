@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="20260403-001" author="gboyeguntaiwo">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT count(*)
+                FROM information_schema.columns
+                WHERE table_name = 'laboratory_sample' AND column_name = 'patient_category'
+            </sqlCheck>
+        </preConditions>
+        <sql>
+            ALTER TABLE laboratory_sample
+                ADD COLUMN patient_category varchar(20) NOT NULL DEFAULT 'NON-PEP';
+
+            -- Update existing records to have default value
+            UPDATE laboratory_sample
+            SET patient_category = 'NON-PEP'
+            WHERE patient_category IS NULL;
+        </sql>
+    </changeSet>
+</databaseChangeLog>

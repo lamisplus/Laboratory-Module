@@ -54,6 +54,7 @@ public class VLOrderAndResultRequestDTO {
     @JsonDeserialize(using = EmptyStringToNullDeserializer.LocalDateDeserializer.class)
     private LocalDate dateApproved;
     private String comments;
+    private String patientCategory;
 
     // Custom setter to handle empty strings for labNumber
     public void setLabNumber(String labNumber) {

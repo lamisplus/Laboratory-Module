@@ -19,4 +19,5 @@ public class SampleDTO {
     public Integer testId;
     private Integer sampleLoggedRemotely;
     private LocalDate dateSampleLoggedRemotely;
+    private String patientCategory;
 }

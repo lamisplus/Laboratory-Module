@@ -59,6 +59,11 @@ public class SampleService {
             sample.setFacilityId(getCurrentUserOrganization());
             sample.setArchived(0);
 
+            // Ensure patient_category is not null, default to NON-PEP
+            if (sample.getPatientCategory() == null || sample.getPatientCategory().trim().isEmpty()) {
+                sample.setPatientCategory("NON-PEP");
+            }
+
             Sample savedSample = repository.save(sample);
 
             try {
@@ -174,6 +179,11 @@ public class SampleService {
             updatedSample.setPatientId(existingSample.getPatientId());
             updatedSample.setFacilityId(existingSample.getFacilityId());
             updatedSample.setArchived(0);
+
+            // Ensure patient_category is not null, default to NON-PEP
+            if (updatedSample.getPatientCategory() == null || updatedSample.getPatientCategory().trim().isEmpty()) {
+                updatedSample.setPatientCategory("NON-PEP");
+            }
 
             // Commented out auto-generation logic - lab_number should remain null if not provided
             /*

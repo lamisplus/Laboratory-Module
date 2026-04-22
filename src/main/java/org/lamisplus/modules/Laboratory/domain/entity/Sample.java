@@ -54,10 +54,15 @@ public class Sample extends Audit<String> {
     private LocalDate dateSampleLoggedRemotely;
     @Column(name = "archived")
     private Integer archived;
+    @Column(name = "patient_category", nullable = false)
+    private String patientCategory;
     @PrePersist
     public void setFields(){
         if(archived == null){
             archived = 0;
+        }
+        if(patientCategory == null || patientCategory.trim().isEmpty()){
+            patientCategory = "NON-PEP";
         }
     }
 }

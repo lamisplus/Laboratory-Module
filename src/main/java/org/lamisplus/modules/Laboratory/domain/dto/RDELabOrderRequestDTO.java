@@ -51,5 +51,6 @@ public class RDELabOrderRequestDTO {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate orderedDate;
     private String labOrderIndication;
+    private String patientCategory;
 
 }

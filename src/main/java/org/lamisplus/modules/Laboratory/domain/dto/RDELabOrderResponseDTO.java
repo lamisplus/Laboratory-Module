@@ -63,4 +63,5 @@ public class RDELabOrderResponseDTO {
     private String labTestOrderStatusName;
     private String labOrderIndication;
     private LocalDate orderedDate;
+    private String patientCategory;
 }

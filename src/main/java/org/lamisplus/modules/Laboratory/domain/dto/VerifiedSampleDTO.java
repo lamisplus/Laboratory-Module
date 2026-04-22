@@ -12,5 +12,6 @@ public class VerifiedSampleDTO {
     public String commentSampleVerified;
     private String sampleVerifiedBy;
     private String sampleAccepted;
+    private String patientCategory;
 }
 

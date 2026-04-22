@@ -22,7 +22,16 @@ public class VerifiedSampleService {
         sample.setCommentSampleVerified(verifiedSampleDTO.getCommentSampleVerified());
         sample.setSampleVerifiedBy(SecurityUtils.getCurrentUserLogin().orElse(""));
 
-     
+        // Update patient_category if provided, otherwise keep existing value
+        if (verifiedSampleDTO.getPatientCategory() != null && !verifiedSampleDTO.getPatientCategory().trim().isEmpty()) {
+            sample.setPatientCategory(verifiedSampleDTO.getPatientCategory());
+        }
+
+        // Ensure patient_category is not null, default to NON-PEP
+        if (sample.getPatientCategory() == null || sample.getPatientCategory().trim().isEmpty()) {
+            sample.setPatientCategory("NON-PEP");
+        }
+
         Sample savedSample = repository.save(sample);
 
         return labMapper.toVerifiedSampleDto(savedSample);

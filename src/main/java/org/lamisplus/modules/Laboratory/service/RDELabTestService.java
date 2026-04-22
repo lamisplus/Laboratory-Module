@@ -86,6 +86,7 @@ public class RDELabTestService {
             sample.setCommentSampleCollected(matchingDTO.getComments());
             sample.setDateSampleLoggedRemotely(matchingDTO.getDateSampleLoggedRemotely());
             sample.setSampleLoggedRemotely(matchingDTO.getSampleLoggedRemotely());
+            sample.setPatientCategory(matchingDTO.getPatientCategory());
 
             if (matchingDTO.getSampleNumber().isEmpty()) {
                 sample.setSampleNumber(Generate_Random_ID() + "-" + String.format("%05d", matchingDTO.getPatientId()));
@@ -200,6 +201,7 @@ public class RDELabTestService {
         sample.setTestId(test.getId());
         sample.setSampleNumber(rdeTestDTO.getSampleNumber());
         sample.setSampleTypeId(rdeTestDTO.getSampleTypeId());
+        sample.setPatientCategory(rdeTestDTO.getPatientCategory());
         sampleService.Update(sample.getId(), sample);
 
         // Only save result if result data is provided
@@ -317,6 +319,7 @@ public class RDELabTestService {
                 testDTO.setSampleNumber(dto.getSamples().get(0).getSampleNumber());
                 testDTO.setSampleLoggedRemotely(dto.getSamples().get(0).getSampleLoggedRemotely());
                 testDTO.setDateSampleLoggedRemotely(dto.getSamples().get(0).getDateSampleLoggedRemotely());
+                testDTO.setPatientCategory(dto.getSamples().get(0).getPatientCategory());
                 try {
                     testDTO.setDateCollectedBy(dto.getSamples().get(0).getDateSampleCollected().toLocalDate());
                 } catch (Exception ignored) {
